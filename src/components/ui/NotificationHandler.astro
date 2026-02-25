@@ -1,0 +1,362 @@
+---
+import { NullViewAnimation } from "@/utils/ViewAnimation";
+---
+
+<div id="notificationBox" transition:persist="notificationBox">
+	<!--<div
+		id="notification"
+		style={{
+			viewTransitionName: "ntfc1",
+			display: "none",
+		}}
+	>
+		<div id="infoBox">
+			<p>
+				<span><i class="fa-regular fa-user"></i>PhiMai</span> hat einen PushShare
+				gesendet
+			</p>
+			<span>IMG_0543455434.png</span>
+		</div>
+		<div id="btnBox">
+			<button id="acceptBtn">
+				<i class="fa-solid fa-check"></i>
+			</button>
+			<button id="denyBtn">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+		</div>
+	</div>-->
+	<!-- <div
+		id="notification"
+		transition:animate="none"
+		style={{
+			viewTransitionName: "ntfc2",
+		}}
+	>
+		<div id="infoBox">
+			<p>
+				<span><i class="fa-regular fa-user"></i>PhiMai</span> hat einen PushShare
+				gesendet
+			</p>
+			<span>IMG_0543455434.png</span>
+		</div>
+		<div id="btnBox">
+			<button id="acceptBtn">
+				<i class="fa-solid fa-check"></i>
+			</button>
+			<button id="denyBtn">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+		</div>
+	</div>
+	<div
+		id="notification"
+		transition:animate="none"
+		style={{
+			viewTransitionName: "ntfc3",
+		}}
+	>
+		<div id="infoBox">
+			<p>
+				<span><i class="fa-regular fa-user"></i>PhiMai</span> hat einen PushShare
+				gesendet
+			</p>
+			<span>IMG_0543455434.png</span>
+		</div>
+		<div id="btnBox">
+			<button id="acceptBtn">
+				<i class="fa-solid fa-check"></i>
+			</button>
+			<button id="denyBtn">
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+		</div>
+	</div> -->
+</div>
+
+<script>
+	import { storedDeviceUUID } from "@/stores/store";
+	import { navigate } from "astro:transitions/client";
+
+	document.addEventListener("SHOW_NOTIFICATION", (e) => {
+		const { pushshare_uuid, sender_name, file_name } = (e as CustomEvent)
+			.detail;
+		if (!pushshare_uuid || !sender_name || !file_name) {
+			console.error("RECIEVED INVALID SHOW_NOTIFICATION EVENT");
+			return;
+		}
+		console.log("TRIGGERED");
+
+		/*alert(
+			sender_name + " hat dir einen Push Share gesendet - " + file_name
+		);*/
+
+		const notificationBox = document.getElementById("notificationBox");
+		const timestamp = performance.now().toString().replaceAll(".", "-");
+		if (!notificationBox) return;
+		notificationBox.insertAdjacentHTML(
+			"beforeend",
+			`<div
+                id="notification"
+                class="pushshare_uuid_${pushshare_uuid}_${timestamp} slideInAnimation"
+                style="
+                    view-transition-name: ntfc1,
+                "
+            >
+                <div id="infoBox">
+                    <p>
+                        <span id="senderNameSpan"><i class="fa-regular fa-user"></i>PhiMai</span> hat einen PushShare
+                        gesendet
+                    </p>
+                    <span id="fileNameSpan">IMG_0543455434.png</span>
+                </div>
+                <div id="btnBox">
+                    <button id="acceptBtn">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                    <button id="denyBtn">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>`
+		);
+
+		const el = notificationBox.querySelector(
+			".pushshare_uuid_" + pushshare_uuid + "_" + timestamp
+		);
+		if (!el) return;
+		const fileNameSpan = el.querySelector("#fileNameSpan");
+		const senderNameSpan = el.querySelector("#senderNameSpan");
+		const acceptBtn = el.querySelector("#acceptBtn");
+		const denyBtn = el.querySelector("#denyBtn");
+
+		if (!fileNameSpan || !senderNameSpan || !acceptBtn || !denyBtn) return;
+
+		fileNameSpan.textContent = file_name;
+		senderNameSpan.textContent = sender_name;
+
+		(acceptBtn as HTMLElement).onclick = (e) => {
+			el.classList.add("slideOutAnimation");
+
+			window.sendSocketMessage({
+				id: "PUSH_SHARE_RECIEVE_ACCEPTED",
+				pushshare_uuid: pushshare_uuid,
+				device_uuid: storedDeviceUUID.get(),
+			});
+
+			navigate(`/push-share?uuid=${pushshare_uuid}`);
+
+			setTimeout(() => {
+				el.remove();
+			}, 250);
+		};
+
+		(denyBtn as HTMLElement).onclick = (e) => {
+			el.classList.add("slideOutAnimation");
+			console.log("CLICK DENY", el, e.target);
+
+			window.sendSocketMessage({
+				id: "PUSH_SHARE_RECIEVE_DENIED",
+				pushshare_uuid: pushshare_uuid,
+				device_uuid: storedDeviceUUID.get(),
+			});
+
+			setTimeout(() => {
+				el.remove();
+			}, 250);
+		};
+
+		setTimeout(() => {
+			el.classList.remove("slideInAnimation");
+		}, 250);
+	});
+</script>
+
+<style lang="scss" is:global>
+	#notificationBox {
+		position: relative;
+
+		z-index: 9999999999;
+		isolation: isolate;
+
+		#notification {
+			display: none;
+			transition: all 0.25s ease-in-out;
+			transform-origin: left;
+
+			&.slideInAnimation {
+				animation: slideIn 0.25s ease-out;
+				animation-iteration-count: 1;
+
+				@keyframes slideIn {
+					0% {
+						top: -1.5rem;
+						opacity: 0%;
+					}
+					100% {
+						top: 0.5rem;
+						opacity: 100%;
+					}
+				}
+			}
+
+			&.slideOutAnimation {
+				animation: slideOut 0.25s ease-in forwards;
+				animation-iteration-count: 1;
+
+				@keyframes slideOut {
+					0% {
+						top: 0.5rem;
+						opacity: 100%;
+					}
+					100% {
+						top: -50%;
+						opacity: 0%;
+					}
+				}
+			}
+		}
+		#notification:first-of-type,
+		#notification:nth-of-type(2),
+		#notification:nth-of-type(3) {
+			position: fixed;
+			top: 0.5rem;
+			left: 50%;
+			transform: translateX(-50%);
+
+			width: min(35rem, calc(100% - 1rem));
+			height: 5rem;
+			border: 1px solid rgb(127.5, 127.5, 127.5);
+			border-radius: 1rem;
+			overflow: hidden;
+
+			z-index: 9999999;
+
+			//background-color: blue;
+			//background-color: rgba(255, 255, 255, 0.2);
+			background-color: rgba(255, 255, 255, 0.1);
+			// entspricht ungefähr background-color: #171717; mit schwarzem bg
+			backdrop-filter: blur(5px) brightness(0.75);
+
+			padding: 1rem;
+
+			display: flex;
+
+			display: grid;
+			grid-template-columns:
+				calc(100% - (2 * 3rem + 0.5rem) - 0.5rem)
+				calc(2 * 3rem + 0.5rem);
+			place-content: center;
+			gap: 0.5rem;
+
+			//box-shadow: rgba(100, 100, 100, 0.24) 0px 3px 8px;
+			box-shadow: rgba(201, 201, 201, 0.35) 0px 3px 15px;
+
+			#infoBox {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+				gap: 0.25rem;
+
+				> p {
+					display: flex;
+					//display: flex;
+					width: 100%;
+					min-width: 0;
+					max-width: 100%;
+					align-items: center;
+					gap: 0.5ch;
+					font-size: 1.25rem;
+
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					overflow: hidden;
+
+					> span {
+						color: orange;
+
+						display: flex;
+						align-items: center;
+						gap: 0.25rem;
+						font-weight: 500;
+
+						> i {
+							display: inline-block;
+							width: 1.5rem;
+							height: 1.5rem;
+
+							color: orange;
+							border: 1px solid orange;
+
+							border-radius: 100%;
+							font-size: 0.8rem;
+
+							display: flex;
+							align-items: center;
+							justify-content: center;
+						}
+					}
+				}
+
+				> span {
+					font-size: 1rem;
+					color: darken(white, 30%);
+				}
+			}
+
+			#btnBox {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+
+				> button {
+					all: unset;
+					box-sizing: border-box;
+					width: 3rem;
+					height: 3rem;
+					border-radius: 1rem;
+					background-color: orange;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					cursor: pointer;
+
+					&#denyBtn {
+						//background-color: blue;
+						background-color: transparent;
+						border: 1px solid white;
+						border-radius: 100%;
+					}
+				}
+			}
+		}
+
+		#notification:nth-of-type(2) {
+			margin-top: 0.7rem;
+			transform-origin: left;
+			scale: 0.95;
+			z-index: 99998;
+			opacity: 0.8;
+			//background-color: black;
+		}
+
+		#notification:nth-of-type(3) {
+			margin-top: 1.3rem;
+			transform-origin: left;
+			scale: 0.9;
+			z-index: 99997;
+			opacity: 0.6;
+
+			> * {
+				opacity: 0;
+			}
+			//background-color: black;
+		}
+	}
+</style>

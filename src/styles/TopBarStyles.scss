@@ -1,0 +1,224 @@
+#topBar {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 5rem;
+	//background-color: #151718;
+	//border-bottom: 1px solid #676e74;
+
+	display: flex;
+	align-items: center;
+	padding-inline: 1rem;
+	gap: 0.5rem;
+
+	overflow-y: auto;
+
+	z-index: 12;
+
+	//scrollbar-gutter: stable;
+
+	// M3E
+	padding-inline: 8px;
+
+	> a {
+		text-decoration: none;
+	}
+
+	> button {
+		all: unset;
+	}
+
+	> i,
+	> a > i,
+	> button > i,
+	.tileBox i {
+		position: relative;
+		width: 3rem;
+		height: 3rem;
+		background-color: rgba(128, 128, 128, 0.5);
+		border-radius: 100%;
+		color: white;
+		flex-shrink: 0;
+		display: grid;
+		place-items: center;
+		font-size: 1.25rem;
+
+		cursor: pointer;
+
+		// M3E Design
+		width: 56px;
+		height: 56px;
+		font-size: 18px;
+		border-radius: 1rem;
+
+		// M3E Design
+		&.unimportant {
+			//border-radius: calc(48px / 2);
+			border-radius: 16px;
+			width: 48px;
+			/* width: 40px;
+            height: 40px;
+            font-size: 14px;
+
+            border-radius: 10rem; */
+		}
+		&.rounded {
+			border-radius: calc(56px / 2);
+		}
+
+		&.selected {
+			background-color: white;
+			color: black;
+
+			//font-weight: 500;
+		}
+
+		&.important {
+			// M3E Expressive
+			width: 72px !important;
+		}
+
+		&.rotate {
+			rotate: 90deg;
+
+			&.unimportant {
+				width: 56px;
+				margin-inline: -4px;
+				height: 48px;
+			}
+		}
+
+		&.rotate-90 {
+			rotate: -90deg;
+
+			&.tile {
+				width: 40px !important;
+				min-width: 40px !important;
+				height: 48px !important;
+				margin-block: -4px;
+				margin-inline: 4px;
+
+				//padding-inline: 0px !important;
+				border-top-right-radius: calc(40px / 2);
+
+				&:not(.selected) {
+					border-bottom-left-radius: 0.5rem;
+				}
+
+				&:first-of-type {
+				}
+			}
+
+			/* &.round {
+                width: 56px;
+                margin-inline: -4px;
+                height: 48px;
+            } */
+		}
+
+		&#pushShareBtn,
+		&#extractBtn {
+			margin-left: auto;
+			transition: opacity 0.25s ease-in-out;
+
+			&.disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+
+			&.loading::after {
+				content: "\f110";
+				position: absolute;
+				right: -0.25rem;
+				bottom: -0.25rem;
+				font-family: "Font Awesome 6 Free";
+				color: lightblue;
+				width: fit-content;
+				height: fit-content;
+				display: inline-block;
+				font-weight: 900;
+
+				animation: rotate 1s linear infinite;
+				transform-origin: center center;
+
+				@keyframes rotate {
+					0% {
+						transform: rotate(0deg);
+					}
+
+					100% {
+						transform: rotate(360deg);
+					}
+				}
+			}
+		}
+	}
+
+	&:has(.ratioBtn[data-ratio-id="Auto"].selected) #orientationTileBox {
+		opacity: 0.5;
+	}
+
+	.tileBox {
+		display: flex;
+		gap: 1px;
+		width: fit-content;
+		min-width: fit-content;
+		height: 2rem;
+
+		border-radius: 0.5rem;
+		overflow: hidden;
+
+		cursor: pointer;
+
+		// M3E Design
+		gap: 2px;
+		height: 40px;
+
+		> i {
+			font-style: normal;
+			height: 100%;
+			//width: 3.5rem;
+			border-radius: 0px;
+
+			// M3E Design
+			border-radius: 8px;
+			font-size: 14px;
+			font-weight: 500;
+			min-width: 48px;
+			width: fit-content;
+			padding-inline: 16px;
+
+			&.fa-solid {
+				font-weight: 900;
+			}
+
+			&:first-of-type {
+				border-top-left-radius: calc(40px / 2);
+				border-bottom-left-radius: calc(40px / 2);
+				border-top-right-radius: 0.5rem;
+				border-bottom-right-radius: 0.5rem;
+			}
+
+			&:last-of-type {
+				border-top-right-radius: calc(40px / 2);
+				border-bottom-right-radius: calc(40px / 2);
+				border-top-left-radius: 0.5rem;
+				border-bottom-left-radius: 0.5rem;
+			}
+
+			&.selected {
+				background-color: white;
+				color: black;
+				font-weight: 600;
+				//margin-inline: -0.05%;
+				border-radius: calc(40px / 2);
+			}
+		}
+	}
+
+	> h2 {
+		display: flex;
+		gap: 0.75rem;
+	}
+}

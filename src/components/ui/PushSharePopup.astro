@@ -1,0 +1,551 @@
+---
+import Button from "./Button.astro";
+
+import { getLocalTimestamp } from "@/utils/utils";
+---
+
+<div id="preventPopupClickBox"></div>
+<div id="pushSharePopup" popover="manual">
+	<button
+		popovertarget="pushSharePopup"
+		popovertargetaction="hide"
+		id="closePopupBtn"
+	>
+		<i class="fa-solid fa-xmark closeBtn"></i>
+	</button>
+	<h2><i class="fa-solid fa-users disabled rounded"></i>PushShare</h2>
+	<ul class="groupList">
+		<li><i class="fa-solid fa-users"></i>Alle</li>
+		<li><i class="fa-solid fa-users"></i>Online</li>
+		<li><i class="fa-solid fa-users"></i>Offline</li>
+	</ul>
+	<p>Online</p>
+	<ul class="deviceList" id="onlineDeviceList">
+		<!-- <li class="accepted">
+			<div>
+				<i class="fa-regular fa-user"></i>
+			</div>
+			<i class="fa-solid fa-check acceptedIcon"></i>
+			<i class="fa-solid fa-ban deniedIcon"></i>
+			<span>PhiMai</span>
+		</li>
+		<li class="denied">
+			<div>
+				<i class="fa-regular fa-user"></i>
+			</div>
+			<i class="fa-solid fa-check acceptedIcon"></i>
+			<i class="fa-solid fa-ban deniedIcon"></i>
+			<span>iPhone</span>
+		</li>
+		<li class="sending">
+			<div>
+				<i class="fa-regular fa-user"></i>
+			</div>
+			<span>iPad</span>
+		</li> -->
+		<span>
+			<i class="fa-solid fa-ban"></i>Keine Online Geräte verfügbar
+		</span>
+	</ul>
+
+	<p>Offline</p>
+	<ul class="deviceList">
+		<!-- <li class="offline">
+			<div>
+				<i class="fa-regular fa-user"></i>
+			</div>
+			<span>A33 von Simon</span>
+		</li>
+		<li class="offline">
+			<div>
+				<i class="fa-regular fa-user"></i>
+			</div>
+			<span>Chrome Instance</span>
+		</li> -->
+		<span>
+			<i class="fa-solid fa-ban"></i>Keine Offline Geräte verfügbar
+		</span>
+	</ul>
+</div>
+
+<script>
+	import {
+		pushShareUploadState,
+		pushShareRecievers,
+		PUSH_SHARE_UPLOAD_STATE,
+		storedExtractCanvas,
+		pushShareUUID,
+	} from "@/stores/store";
+	import { createInitSwapOnPageLoadFunction } from "@/utils/InitSwapFunction";
+	import { fade } from "astro:transitions";
+
+	let WAITING_RECIEVERS: string[] = [];
+
+	async function UploadPushShare() {
+		const pushshare_uuid = pushShareUUID.get();
+		if (!pushshare_uuid) throw new Error("PUSH SHARE UUID UNDEFINED!");
+
+		const extractCanvas = storedExtractCanvas.get();
+		if (!extractCanvas) throw new Error("EXTRACT CANVAS IS UNDEFINED!");
+		console.log("SHARE");
+		//const data = extractCanvas.toDataURL("image/png");
+		const blob = await new Promise<Blob | null>((resolve, reject) => {
+			extractCanvas.toBlob((blob) => {
+				if (blob) resolve(blob);
+				else reject(new Error("toBlob() returned null"));
+			}, "image/png");
+		});
+
+		console.log("BLOb FEDDISCH", blob === null);
+
+		if (blob === null) {
+			throw new Error("Ein Fehler beim konvertieren ist aufgetreten!");
+		}
+
+		let timestamp = getLocalTimestamp();
+		let fileName = "Scan " + timestamp + ".png";
+
+		// Create a File object
+		const file = new File([blob], fileName, {
+			type: "image/png",
+		});
+
+		const formData = new FormData();
+		formData.append("images", file);
+		formData.append("pushshare_uuid", pushshare_uuid);
+		// TODO: FIX !
+		formData.append("device_uuid", sessionStorage.getItem("DEVICE_UUID")!);
+
+		const res = await fetch(
+			"https://api.astrowhiteboardscanner.zorrle001.dev/upload",
+			{
+				method: "POST",
+				body: formData,
+			}
+		);
+
+		if (!res.ok) {
+			console.error("Upload failed");
+			return;
+		}
+
+		const data = await res.json();
+		console.log("Upload success", data);
+		pushShareUploadState.set(PUSH_SHARE_UPLOAD_STATE.UPLOADED);
+
+		console.log("UPLOAD FINISHED", pushShareRecievers.get());
+		for (const reciever_uuid of pushShareRecievers.get()) {
+			const recieverEl = document.querySelector(
+				`li[data-device-uuid='${reciever_uuid}']`
+			);
+			recieverEl?.classList.remove("sending");
+			recieverEl?.classList.add("sent");
+		}
+
+		for (const device_uuid of WAITING_RECIEVERS) {
+			AddPushShareReciever([device_uuid]);
+		}
+		WAITING_RECIEVERS = [];
+	}
+
+	function AddPushShareReciever(reciever_uuids: string[]) {
+		window.sendSocketMessage({
+			id: "ADD_PUSH_SHARE_RECIEVERS",
+			pushshare_uuid: pushShareUUID.get(),
+			reciever_uuids: reciever_uuids,
+		});
+	}
+
+	function getLocalTimestamp(): string {
+		const d = new Date(); // lokales Datum/Zeit
+		const year = d.getFullYear();
+		const month = pad(d.getMonth() + 1); // 0-basiert
+		const day = pad(d.getDate());
+		const hours = pad(d.getHours());
+		const minutes = pad(d.getMinutes());
+		const seconds = pad(d.getSeconds());
+		return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+	}
+
+	function pad(n: number) {
+		return String(n).padStart(2, "0");
+	}
+
+	// SUBSCRITPION WIRD DERZEIT AKTIV WENN PAGE MIT pushSharePopup gerendert wird, selbst wenn dieses geschlossen ist.
+	// UNSCUBSCRIPE bei verlassen der page
+	createInitSwapOnPageLoadFunction(() => {
+		var pushSharePopup = document.getElementById("pushSharePopup");
+		//console.log("PSP", pushSharePopup);
+		if (!pushSharePopup) {
+			window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = undefined;
+			window.sendSocketMessage({
+				id: "UNSUBSCRIBE_ONLINE_DEVICES",
+			});
+		} else {
+			window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = (devices) => {
+				//console.log("UPDATE", devices);
+				console.log(devices);
+				const onlineDeviceList =
+					document.getElementById("onlineDeviceList");
+				if (!onlineDeviceList) return;
+
+				onlineDeviceList.innerHTML = "";
+				if (devices.length === 0) {
+					onlineDeviceList.insertAdjacentHTML(
+						"beforeend",
+						`<span>
+                            <i class="fa-solid fa-ban"></i>Keine Online Geräte verfügbar
+                        </span>`
+					);
+					return;
+				}
+
+				for (const { uuid, name } of devices) {
+					onlineDeviceList.insertAdjacentHTML(
+						"beforeend",
+						`<li data-device-uuid='${uuid}'>
+						<div>
+							<i class="fa-regular fa-user"></i>
+						</div>
+						<i class="fa-solid fa-check acceptedIcon"></i>
+						<i class="fa-solid fa-ban deniedIcon"></i>
+						<span></span>
+					</li>`
+					);
+					// TO AVOID HTML INJECTION
+					onlineDeviceList.querySelector(
+						"li:last-child span"
+					)!.textContent = name;
+				}
+
+				for (const LiEl of onlineDeviceList.querySelectorAll("li")) {
+					LiEl.onclick = async () => {
+						const device_uuid = LiEl.dataset.deviceUuid;
+						if (!device_uuid) return;
+						console.log(device_uuid);
+
+						const state = pushShareUploadState.get();
+						if (state == PUSH_SHARE_UPLOAD_STATE.UPLOADED) {
+							LiEl.classList.add("sent");
+						} else {
+							LiEl.classList.add("sending");
+						}
+
+						const current_recievers = pushShareRecievers.get();
+						if (current_recievers.has(device_uuid)) {
+							console.log("DEVICE IS ALREADY RECIEVER. SKIPPED");
+							return;
+						}
+
+						pushShareRecievers.set(
+							current_recievers.add(device_uuid)
+						);
+
+						console.log("UUID", device_uuid);
+
+						// TODO: DURING *UPLOADING*state IT CRASHES BECAUSE ITS SENT before upload sone
+						if (state == PUSH_SHARE_UPLOAD_STATE.NOT_UPLOADED) {
+							pushShareUploadState.set(
+								PUSH_SHARE_UPLOAD_STATE.UPLOADING
+							);
+							WAITING_RECIEVERS.push(device_uuid);
+							await UploadPushShare();
+							console.log("DONE; ADD RECIEVER");
+							//AddPushShareReciever([device_uuid]);
+						} else if (state == PUSH_SHARE_UPLOAD_STATE.UPLOADING) {
+							WAITING_RECIEVERS.push(device_uuid);
+						} else {
+							AddPushShareReciever([device_uuid]);
+						}
+					};
+				}
+			};
+			window.sendSocketMessage({
+				id: "SUBSCRIBE_ONLINE_DEVICES",
+			});
+		}
+	});
+
+	document.addEventListener("PUSH_SHARE_POPUP_CLEAR_STATE", (e) => {
+		for (const reciever of document.querySelectorAll(".deviceList li")) {
+			// REMOVE ALL CLASSES
+			reciever.className = "";
+		}
+		console.log("CLEARED PUSH ShARE POPUP STATE");
+	});
+</script>
+
+<style lang="scss">
+	:root {
+	}
+
+	#preventPopupClickBox {
+		display: none;
+	}
+
+	:global(html:has(#pushSharePopup:popover-open) #preventPopupClickBox) {
+		display: block;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+		top: 0px;
+		left: 0px;
+		//background-color: black;
+		backdrop-filter: blur(5px);
+		//opacity: 0.5;
+
+		z-index: 100;
+	}
+
+	:global(html:has(#pushSharePopup:popover-open) #pushSharePopup) {
+		display: flex !important;
+		opacity: 1 !important;
+	}
+
+	#pushSharePopup {
+		position: fixed;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: min(calc(100% - 2rem), 40rem);
+		height: calc(100% - 11rem);
+		background-color: black;
+		border-radius: 1rem;
+		border: 1px solid darken(white, 50%);
+		padding: 1.5rem;
+		color: white;
+
+		display: none;
+
+		flex-direction: column;
+		gap: 1rem;
+
+		font-size: 2rem;
+
+		&::backdrop {
+			//background-color: rgba(0, 0, 0, 0.5);
+			touch-action: none !important;
+		}
+
+		#closePopupBtn {
+			position: absolute;
+
+			border: none;
+
+			right: 1.5rem;
+			top: 1.5rem;
+			width: 3rem;
+			height: 3rem;
+			background-color: rgba(128, 128, 128, 0.5);
+			border-radius: 100%;
+			color: white;
+			flex-shrink: 0;
+			display: grid;
+			place-items: center;
+			font-size: 1.25rem;
+
+			cursor: pointer;
+
+			// M3E Design
+			width: 56px;
+			height: 56px;
+			font-size: 18px;
+			//border-radius: 1rem;
+
+			// ROUNDED
+			border-radius: calc(56px / 2);
+		}
+
+		> h2 {
+			display: flex;
+			align-items: center;
+			font-size: 2rem;
+			height: 56px;
+			gap: 0.5rem;
+
+			> i {
+				font-size: 1.75rem;
+			}
+		}
+
+		> p {
+			color: darken(white, 30%);
+			font-size: 1.25rem;
+
+			&:not(:first-of-type) {
+				margin-top: 1rem;
+			}
+		}
+
+		.groupList {
+			list-style: none;
+			display: flex;
+			gap: 0.5rem;
+			margin-top: -0.5rem;
+			margin-bottom: 1rem;
+
+			> li {
+				width: fit-content;
+				height: 2rem;
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+
+				padding-inline: 1rem;
+				font-size: 1rem;
+				font-weight: 500;
+				border-radius: 8px;
+
+				//background-color: white;
+				border: 1px solid white;
+				//color: black;
+
+				cursor: pointer;
+			}
+		}
+
+		.deviceList {
+			list-style: none;
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+
+			:global(> span) {
+				display: flex;
+				align-items: center;
+				gap: 0.25rem;
+				font-size: 1rem;
+
+				:global(> i) {
+					font-size: 0.75rem;
+				}
+			}
+
+			:global(> li) {
+				position: relative;
+				display: flex;
+				width: 56px;
+				gap: 0.5rem;
+				flex-direction: column;
+				align-items: center;
+
+				:global(> i) {
+					display: none;
+					position: absolute;
+					font-size: 0.75rem;
+					top: calc(56px - 16px);
+					left: calc(56px - 16px);
+					width: 1.25rem;
+					height: 1.25rem;
+					border-radius: 999rem;
+					//width: 0px;
+					//height: 0px;
+					//padding: 0.25rem;
+					//display: flex;
+					align-items: center;
+					justify-content: center;
+					//padding-top: 0.1rem;
+
+					background-color: blue;
+
+					&::before {
+						margin-top: 0.9px;
+						text-box-trim: trim-both;
+					}
+
+					&.acceptedIcon {
+						background-color: rgb(84, 236, 84);
+					}
+
+					&.deniedIcon {
+						background-color: rgb(255, 51, 51);
+					}
+				}
+
+				:global(> div) {
+					position: relative;
+					display: grid;
+					place-content: center;
+					width: 56px;
+					height: 56px;
+					background-color: rgba(128, 128, 128, 0.5);
+					border-radius: calc(56px / 2);
+
+					cursor: pointer;
+
+					:global(> i) {
+						font-size: 1.5rem;
+					}
+
+					&::before {
+						content: "";
+						position: absolute;
+						top: -4px;
+						left: -4px;
+						width: 60px;
+						height: 60px;
+						border: 2px solid transparent;
+						border-radius: 999rem;
+					}
+				}
+
+				&.sending {
+					:global(> div::before) {
+						border-color: orange;
+						clip-path: polygon(50% 0%, 100% 0, 100% 50%, 50% 50%);
+
+						//transform-origin: center center;
+						animation: 1s rotate infinite
+							cubic-bezier(0.42, 0.1, 0.58, 0.9);
+
+						@keyframes rotate {
+							from {
+								rotate: 0deg;
+							}
+							to {
+								rotate: 360deg;
+							}
+						}
+					}
+				}
+
+				&.sent {
+					:global(> div::before) {
+						border-color: orange;
+					}
+				}
+
+				&.accepted {
+					:global(> div::before) {
+						border-color: rgb(84, 236, 84);
+					}
+
+					:global(.acceptedIcon) {
+						display: flex;
+					}
+				}
+
+				&.denied {
+					:global(> div::before) {
+						border-color: rgb(255, 51, 51);
+					}
+
+					:global(.deniedIcon) {
+						display: flex;
+					}
+				}
+
+				&.offline {
+					opacity: 0.5;
+				}
+
+				:global(> span) {
+					font-size: 1rem;
+					text-align: center;
+				}
+			}
+		}
+	}
+</style>

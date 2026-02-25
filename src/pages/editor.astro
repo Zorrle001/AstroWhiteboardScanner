@@ -1,0 +1,188 @@
+---
+import Button from "@/components/ui/Button.astro";
+import PageLayout from "@/layouts/PageLayout.astro";
+import TopBar from "@/components/ui/TopBar.astro";
+import { PageViewAnimation } from "@/utils/ViewAnimation";
+import { undefined } from "astro:schema";
+import PrefetchLinks from "@/components/PrefetchLinks.astro";
+import Dialog from "@/components/ui/Dialog.astro";
+import NotificationHandler from "@/components/ui/NotificationHandler.astro";
+---
+
+<PageLayout
+	title="WhiteboardScanner"
+	pageID="editorPage"
+	viewAnimation={PageViewAnimation}
+>
+	<PrefetchLinks urls={["/", "/editor-export"]} />
+	<Dialog id="extractingDialog" title="Bild wird extrahiert..." />
+	<TopBar>
+		<i
+			class="fa-solid fa-arrows-up-down rotate rounded unimportant"
+			id="flipXBtn"
+		>
+		</i>
+		<i class="fa-solid fa-arrows-up-down rounded unimportant" id="flipYBtn">
+		</i>
+		<i
+			class="fa-solid fa-ban rounded unimportant"
+			id="resetCornerPointsBtn"
+		>
+		</i>
+		<div class="tileBox">
+			<i class="ratioBtn tile" data-ratio-id="Auto">Auto</i>
+			<i class="ratioBtn tile" data-ratio-id="1:1">1:1</i>
+			<i class="ratioBtn tile" data-ratio-id="4:3">4:3</i>
+			<i class="ratioBtn tile" data-ratio-id="16:9">16:9</i>
+			<i class="ratioBtn tile" data-ratio-id="2:1">2:1</i>
+			<i class="ratioBtn tile" data-ratio-id="A4">A4</i>
+		</div>
+		<div class="tileBox" id="orientationTileBox">
+			<i
+				class="orientationBtn tile fa-solid fa-mobile rotate-90"
+				id="landscapeBtn"
+				data-orientation-id="landscape"
+			>
+			</i>
+			<i
+				class="orientationBtn tile fa-solid fa-mobile"
+				id="portraitBtn"
+				data-orientation-id="portrait"
+			>
+			</i>
+		</div>
+		<!-- <i class="ratioBtn tile fa-solid fa-mobile rotate-90" id="landscapeBtn">
+        </i>
+        <i class="ratioBtn tile fa-solid fa-mobile" id="portraitBtn"></i> -->
+		<!--  -->
+
+		<i class="fa-solid fa-crop-simple important selected" id="extractBtn">
+		</i>
+		<a onclick="history.back()">
+			<i class="fa-solid fa-xmark closeBtn"></i>
+		</a>
+	</TopBar>
+	<canvas id="overlayCanvas"></canvas>
+	<div id="canvasContainer">
+		<canvas id="result" transition:persist="resultCanvas"></canvas>
+		<!-- <canvas id="cornerPointCanvas"></canvas>
+        <canvas id="cornerPointCircleCanvas"></canvas> -->
+		<div id="cornerZoomWrapper">
+			<canvas id="cornerZoomCanvas"></canvas>
+		</div>
+	</div>
+
+	<style lang="scss">
+		@use "@/styles/EditorPageStyles.scss";
+	</style>
+
+	<script>
+		import { createInitSwapFunction } from "@/utils/InitSwapFunction";
+		import {
+			extract,
+			attachEditorEventListeners,
+			loadImageEditor,
+			resetCornerPoints,
+		} from "@/utils/EditorScript";
+		import { storedEditorImageSrc } from "@/stores/store";
+		import { drawEditorFrame, flipCanvas } from "@/utils/EditorScript";
+		import { EditorSettings } from "@/stores/persistantStore";
+		import type { RATIO, ORIANTATION } from "@/stores/persistantStore";
+
+		attachEditorEventListeners();
+
+		createInitSwapFunction(() => {
+			const canvas = document.getElementById(
+				"result",
+			) as HTMLCanvasElement;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return;
+
+			// LEFT SIDE TOP BAR
+			document
+				.getElementById("flipXBtn")
+				?.addEventListener("click", () => {
+					flipCanvas(canvas, ctx, true, false);
+				});
+			document
+				.getElementById("flipYBtn")
+				?.addEventListener("click", () => {
+					flipCanvas(canvas, ctx, false, true);
+				});
+
+			document
+				.getElementById("resetCornerPointsBtn")
+				?.addEventListener("click", () => {
+					resetCornerPoints();
+				});
+
+			for (const ratioBtn of document.querySelectorAll(
+				".ratioBtn",
+			) as NodeListOf<HTMLElement>) {
+				ratioBtn.onclick = () => {
+					document
+						.querySelector(".ratioBtn.selected")
+						?.classList.remove("selected");
+					ratioBtn.classList.add("selected");
+					EditorSettings.setKey(
+						"ratio",
+						ratioBtn.dataset.ratioId as RATIO,
+					);
+				};
+			}
+
+			for (const orientationBtn of document.querySelectorAll(
+				".orientationBtn",
+			) as NodeListOf<HTMLElement>) {
+				orientationBtn.onclick = () => {
+					document
+						.querySelector(".orientationBtn.selected")
+						?.classList.remove("selected");
+					orientationBtn.classList.add("selected");
+					EditorSettings.setKey(
+						"orientation",
+						orientationBtn.dataset["orientation-id"] as ORIANTATION,
+					);
+				};
+			}
+
+			const editorSettings = EditorSettings.get();
+			const ratio = editorSettings.ratio;
+			const orientation = editorSettings.orientation;
+			document
+				.querySelector(`[data-ratio-id="${ratio.toString()}"]`)
+				?.classList.add("selected");
+			document
+				.querySelector(
+					`[data-orientation-id="${orientation.toString()}"]`,
+				)
+				?.classList.add("selected");
+
+			// RIGHT SIDE NAV BAR
+			const extractBtn = document.getElementById(
+				"extractBtn",
+			) as HTMLElement;
+			extractBtn.onclick = async () => {
+				extract();
+			};
+
+			if (!canvas || canvas.dataset.imageLoaded === "true") {
+				console.log("IMG ALREADY LOADED");
+				drawEditorFrame();
+				return;
+			}
+			//const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+			console.log("IMG NOT LOADED - lets load it");
+
+			const imageSrc = storedEditorImageSrc.get();
+			if (!imageSrc) {
+				//navigate("/", { history: "replace" });
+				loadImageEditor("/bertie.jpg");
+				return;
+			} else {
+				loadImageEditor(imageSrc);
+			}
+		}, "/editor");
+	</script>
+</PageLayout>

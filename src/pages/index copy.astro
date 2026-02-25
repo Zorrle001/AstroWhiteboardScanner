@@ -1,0 +1,131 @@
+---
+import PrefetchLinks from "@/components/PrefetchLinks.astro";
+import Button from "@/components/ui/Button.astro";
+import PageLayout from "@/layouts/PageLayout.astro";
+import { HomeViewAnimation } from "@/utils/ViewAnimation";
+---
+
+<PageLayout
+    title="WhiteboardScanner"
+    pageID="homePage"
+    viewAnimation={HomeViewAnimation}
+>
+    <PrefetchLinks urls={["/editor"]} />
+    <i class="fa-solid fa-photo-film" id="startIcon"></i>
+    <Button
+        id="osCameraBtn"
+        text="OS-Kamera öffnen"
+        iconClass="fa-solid fa-camera"
+    />
+    <input
+        type="file"
+        id="osCameraInput"
+        capture="environment"
+        accept="image/*"
+        hidden
+    />
+    <Button
+        id="startPageUploadBtn"
+        text="Hochladen"
+        secondary
+        iconClass="fa-solid fa-upload"
+    />
+    <input
+        type="file"
+        name="image-upload"
+        accept="image/*"
+        id="uploadInput"
+        hidden
+    />
+    <hr />
+    <Button
+        id="historyBtn"
+        text="Verlauf"
+        secondary
+        iconClass="fa-solid fa-clock-rotate-left"
+    />
+    <Button
+        id="sendToDeviceBtn"
+        text="An Gerät senden"
+        secondary
+        iconClass="fa-solid fa-satellite-dish"
+    />
+
+    <section id="pushShareSection">
+        <i class="fa-solid fa-users"></i>
+        <div>
+            <p>Push-Share Funktion aktivieren</p>
+
+            <input
+                type="text"
+                id="pushShareNameInput"
+                placeholder="[Unbekannt]"
+            />
+        </div>
+        <!-- <input type="checkbox" /> -->
+        <md-checkbox id="pushSharingCheckbox"></md-checkbox>
+        <section id="offline">
+            <i class="fa-solid fa-globe"></i>
+            <p>Offline</p>
+        </section>
+    </section>
+</PageLayout>
+
+<script type="importmap" is:inline>
+    {
+        "imports": {
+            "@material/web/": "https://esm.run/@material/web/"
+        }
+    }
+</script>
+<script type="module" is:inline>
+    import "@material/web/all.js";
+    import { styles as typescaleStyles } from "@material/web/typography/md-typescale-styles.js";
+
+    document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+</script>
+
+<style lang="scss">
+    @use "@/styles/HomeStyles.scss";
+</style>
+
+<script>
+    import { storedEditorImageSrc } from "@/stores/store";
+    import { createInitSwapFunction } from "@/utils/InitSwapFunction";
+    import { navigate } from "astro:transitions/client";
+
+    createInitSwapFunction(() => {
+        const osCameraBtn = document.getElementById("osCameraBtn");
+        const osCameraInput = document.getElementById("osCameraInput");
+
+        const uploadBtn = document.getElementById("startPageUploadBtn");
+        const uploadInput = document.getElementById("uploadInput");
+
+        if (!osCameraBtn || !osCameraInput || !uploadBtn || !uploadInput)
+            throw new Error();
+
+        osCameraBtn.addEventListener("click", () => {
+            osCameraInput.click();
+        });
+
+        uploadBtn.addEventListener("click", () => {
+            uploadInput.click();
+        });
+
+        osCameraInput.addEventListener("change", onFileUpload);
+        uploadInput.addEventListener("change", onFileUpload);
+
+        function onFileUpload(e: Event) {
+            const target = e.target as HTMLInputElement;
+            if (!target.files || target.files.length === 0) return;
+
+            const file = target.files[0];
+            const objectURL = URL.createObjectURL(file);
+            storedEditorImageSrc.set(objectURL);
+
+            navigate("/editor");
+
+            target.value = "";
+        }
+    }, "/");
+</script>

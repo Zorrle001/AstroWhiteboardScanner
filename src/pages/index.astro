@@ -1,16 +1,130 @@
 ---
-
+import PrefetchLinks from "@/components/PrefetchLinks.astro";
+import Button from "@/components/ui/Button.astro";
+import NotificationHandler from "@/components/ui/NotificationHandler.astro";
+import PageLayout from "@/layouts/PageLayout.astro";
+import { HomeViewAnimation } from "@/utils/ViewAnimation";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<PageLayout
+	title="WhiteboardScanner"
+	pageID="homePage"
+	viewAnimation={HomeViewAnimation}
+>
+	<PrefetchLinks urls={["/editor"]} />
+	<i class="fa-solid fa-photo-film" id="startIcon"></i>
+	<Button
+		id="osCameraBtn"
+		extraClass="open"
+		text="OS-Kamera öffnen"
+		iconClass="fa-solid fa-camera"
+	/>
+
+	<input
+		type="file"
+		id="osCameraInput"
+		capture="environment"
+		accept="image/*"
+		hidden
+	/>
+	<Button
+		id="startPageUploadBtn"
+		extraClass="close"
+		text="Hochladen"
+		secondary
+		iconClass="fa-solid fa-upload"
+	/>
+	<input
+		type="file"
+		name="image-upload"
+		accept="image/*"
+		id="uploadInput"
+		hidden
+	/>
+	<hr />
+	<Button
+		id="historyBtn"
+		extraClass="open"
+		text="Verlauf"
+		secondary
+		iconClass="fa-solid fa-clock-rotate-left"
+		href="history"
+	/>
+	<Button
+		id="sendToDeviceBtn"
+		text="An Gerät senden"
+		secondary
+		iconClass="fa-solid fa-satellite-dish"
+	/>
+
+	<!-- <md-filled-button size="large"
+        ><i class="fa-solid fa-camera"></i>OS-Kamera öffnen</md-filled-button
+    >
+    <md-filled-tonal-button
+        ><i class="fa-solid fa-upload"></i>Hochladen</md-filled-tonal-button
+    >
+    <md-outlined-button>Back</md-outlined-button> -->
+
+	<section id="pushShareSection">
+		<i class="fa-solid fa-users"></i>
+		<div>
+			<p>Push-Share Funktion aktivieren</p>
+
+			<input
+				type="text"
+				id="pushShareNameInput"
+				placeholder="[Unbekannt]"
+			/>
+		</div>
+		<input type="checkbox" />
+		<section id="offline">
+			<i class="fa-solid fa-globe"></i>
+			<p>Offline</p>
+		</section>
+	</section>
+</PageLayout>
+
+<style lang="scss">
+	@use "@/styles/HomeStyles.scss";
+</style>
+
+<script>
+	import { storedEditorImageSrc } from "@/stores/store";
+	import { createInitSwapFunction } from "@/utils/InitSwapFunction";
+	import { navigate } from "astro:transitions/client";
+
+	createInitSwapFunction(() => {
+		const osCameraBtn = document.getElementById("osCameraBtn");
+		const osCameraInput = document.getElementById("osCameraInput");
+
+		const uploadBtn = document.getElementById("startPageUploadBtn");
+		const uploadInput = document.getElementById("uploadInput");
+
+		if (!osCameraBtn || !osCameraInput || !uploadBtn || !uploadInput)
+			throw new Error();
+
+		osCameraBtn.addEventListener("click", () => {
+			osCameraInput.click();
+		});
+
+		uploadBtn.addEventListener("click", () => {
+			uploadInput.click();
+		});
+
+		osCameraInput.addEventListener("change", onFileUpload);
+		uploadInput.addEventListener("change", onFileUpload);
+
+		function onFileUpload(e: Event) {
+			const target = e.target as HTMLInputElement;
+			if (!target.files || target.files.length === 0) return;
+
+			const file = target.files[0];
+			const objectURL = URL.createObjectURL(file);
+			storedEditorImageSrc.set(objectURL);
+
+			navigate("/editor");
+
+			target.value = "";
+		}
+	}, "/");
+</script>

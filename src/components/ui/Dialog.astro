@@ -1,0 +1,90 @@
+---
+type Props = {
+    id: string;
+    title: string;
+};
+
+const { id, title } = Astro.props;
+---
+
+<div id="preventPopupClickBox"></div>
+<div id={id} class="dialog" popover="manual">
+    <h1 popovertargetaction="hide">{title}</h1><i class="fa-solid fa-spinner">
+    </i>
+</div>
+
+<style lang="scss">
+    #preventPopupClickBox {
+        display: none;
+    }
+
+    :global(html:has(.dialog:popover-open) #preventPopupClickBox) {
+        display: block;
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        top: 0px;
+        left: 0px;
+        background-color: transparent;
+
+        z-index: 100;
+    }
+
+    :global(html:has(.dialog:popover-open) .dialog) {
+        display: flex !important;
+        opacity: 1 !important;
+    }
+
+    .dialog {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: fit-content;
+        height: 10rem;
+        background-color: black;
+        border-radius: 1.5rem;
+        padding: 3rem;
+        color: white;
+
+        display: none;
+
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+
+        font-size: 2rem;
+
+        border: none;
+        border-color: rgb(64 64 64);
+
+        opacity: 0;
+        transition: all 1s linear;
+        transition-behavior: allow-discrete;
+
+        //touch-action: none !important;
+
+        &::backdrop {
+            //background-color: rgba(0, 0, 0, 0.5);
+            touch-action: none !important;
+        }
+
+        > h1 {
+            font-size: 2rem;
+        }
+
+        > i {
+            animation: rotate 1s infinite ease-in-out;
+            font-size: 2rem;
+
+            @keyframes rotate {
+                from {
+                    rotate: 20deg;
+                }
+                to {
+                    rotate: 380deg;
+                }
+            }
+        }
+    }
+</style>

@@ -1,0 +1,102 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+/* type Props = {
+    id?: string;
+}; */
+
+interface Props extends HTMLAttributes<"p"> {
+	text: string;
+	extraClass?: string;
+	secondary?: boolean;
+	iconClass?: string;
+	href?: string;
+}
+
+const {
+	text,
+	extraClass = "",
+	secondary = false,
+	iconClass = "",
+	href,
+	...rest
+} = Astro.props;
+---
+
+<a href={href}>
+	<button
+		{...rest}
+		class={secondary ? "secondary " + extraClass : extraClass}
+	>
+		{iconClass && <i class={iconClass} />}
+		{text}
+	</button>
+</a>
+
+<style lang="scss">
+	a {
+		text-decoration: none;
+
+		> button {
+			all: unset;
+			flex-shrink: 0;
+			position: relative;
+			font-family: inherit;
+			color: white;
+			width: 15rem;
+			height: 3rem;
+
+			background-color: orange;
+			border-radius: 10rem;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+
+			font-size: 1.15rem;
+
+			cursor: pointer;
+
+			transition: background 0.2s ease-in-out;
+
+			// M3E
+			height: 56px;
+			font-weight: 500;
+			font-size: 18px;
+			padding-inline: 24px;
+			//border-radius: 1rem;
+			border-radius: 0px;
+			--b-r: 0.5rem;
+
+			&:hover {
+				background-color: darken(orange, 10%);
+			}
+
+			&.secondary {
+				background-color: #151718;
+				//border-radius: 10rem;
+				//border-radius: 100%;
+
+				&:hover {
+					background-color: lighten(#151718, 5%);
+				}
+			}
+
+			&.disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+		}
+
+		&:first-of-type button,
+		button.open {
+			border-radius: calc(56px / 2) calc(56px / 2) var(--b-r) var(--b-r);
+		}
+
+		&:last-of-type button,
+		button.close {
+			border-radius: var(--b-r) var(--b-r) calc(56px / 2) calc(56px / 2);
+		}
+	}
+</style>

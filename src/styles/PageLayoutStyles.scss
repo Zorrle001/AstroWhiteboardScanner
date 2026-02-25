@@ -1,0 +1,27 @@
+@use "@/styles/tokens.scss" as *;
+
+body > article {
+    position: relative;
+    margin-top: $tabBarHeight;
+    height: calc(100% - $tabBarHeight);
+    max-height: 100%;
+    width: 100%;
+
+    //overflow-x: hidden;
+    //overflow-y: auto;
+    overflow: auto;
+    //touch-action: none;
+
+    transition: scale 0.25s ease-in-out, opacity 0.25s ease-in-out,
+        visibility 0.25s ease-in-out;
+    transform-origin: center center;
+    transition-behavior: allow-discrete;
+
+    //background-color: black;
+
+    &:not(#homePage) {
+        padding: clamp(0px, 5cqi, 5rem);
+        padding-top: 5rem;
+        padding-bottom: clamp(0px, 5cqi, 2.5rem);
+    }
+}

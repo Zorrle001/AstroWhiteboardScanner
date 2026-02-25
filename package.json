@@ -1,14 +1,24 @@
 {
-  "name": "astrowhiteboardscanner",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-  "dependencies": {
-    "astro": "^5.15.3"
-  }
+	"name": "astrowhiteboardscanner",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev --host",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro"
+	},
+	"dependencies": {
+		"@fortawesome/fontawesome-free": "^7.1.0",
+		"@nanostores/persistent": "^1.2.0",
+		"@types/uuid": "^10.0.0",
+		"astro": "^5.17.3",
+		"drizzle-orm": "^0.44.7",
+		"nanostores": "^1.0.1",
+		"sass": "^1.93.3",
+		"uuid": "^13.0.0"
+	},
+	"devDependencies": {
+		"drizzle-kit": "^0.18.1"
+	}
 }

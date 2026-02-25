@@ -1,0 +1,152 @@
+---
+import PrefetchLinks from "@/components/PrefetchLinks.astro";
+import PushSharePopup from "@/components/ui/PushSharePopup.astro";
+import TopBar from "@/components/ui/TopBar.astro";
+import PageLayout from "@/layouts/PageLayout.astro";
+import { PageViewAnimation } from "@/utils/ViewAnimation";
+---
+
+<PageLayout
+	title="WhiteboardScanner"
+	pageID="exportPage"
+	viewAnimation={PageViewAnimation}
+>
+	<PrefetchLinks urls={["/", "/editor"]} />
+	<PushSharePopup />
+	<TopBar>
+		<a onclick="history.back()">
+			<i class="fa-solid fa-arrow-left important" id="backBtn"></i>
+		</a>
+		<i
+			class="fa-solid fa-arrows-up-down rotate rounded unimportant"
+			id="flipXBtn"
+		>
+		</i>
+		<i class="fa-solid fa-arrows-up-down rounded unimportant" id="flipYBtn">
+		</i>
+		<button style="margin-left: auto" popovertarget="pushSharePopup">
+			<i class="fa-solid fa-users disabled rounded" id="pushShareBtn"></i>
+		</button>
+		<i class="fa-solid fa-arrow-up-from-bracket rounded" id="shareBtn"></i>
+		<a href="/" astro-><i class="fa-solid fa-xmark closeBtn"></i></a>
+	</TopBar>
+	<div id="canvasContainer"></div>
+	<canvas id="result" transition:persist="resultCanvas"></canvas>
+</PageLayout>
+
+<style lang="scss">
+	:global(#exportPage #result) {
+		display: none;
+	}
+</style>
+
+<script>
+	import { createInitSwapFunction } from "@/utils/InitSwapFunction";
+	import {
+		PUSH_SHARE_UPLOAD_STATE,
+		pushShareUploadState,
+		pushShareUUID,
+		pushShareRecievers,
+		storedExtractCanvas,
+	} from "@/stores/store";
+	import { getLocalTimestamp } from "@/utils/utils";
+	import { flipCanvas } from "@/utils/EditorScript";
+	import { v4 as uuidv4 } from "uuid";
+	import { navigate } from "astro:transitions/client";
+
+	createInitSwapFunction(() => {
+		const extractCanvas = storedExtractCanvas.get();
+		if (!extractCanvas) {
+			//navigate("/", { history: "replace" });
+			navigate("/editor", { history: "replace" });
+			console.warn("SHOULD NAVIGATE");
+			return;
+		}
+
+		CreateNewPushShareID();
+
+		console.log("Extract Canvas", extractCanvas);
+		extractCanvas.id = "extractCanvas";
+		document.getElementById("canvasContainer")?.append(extractCanvas);
+
+		const extractCtx = extractCanvas.getContext("2d");
+		if (!extractCtx) return;
+
+		// LEFT SIDE NAV BAR
+		document.getElementById("flipXBtn")?.addEventListener("click", () => {
+			flipCanvas(extractCanvas, extractCtx, true, false);
+			CreateNewPushShareID();
+		});
+		document.getElementById("flipYBtn")?.addEventListener("click", () => {
+			flipCanvas(extractCanvas, extractCtx, false, true);
+			CreateNewPushShareID();
+		});
+
+		const shareBtn = document.getElementById("shareBtn");
+		if (!shareBtn) return;
+		shareBtn.onclick = async () => {
+			try {
+				console.log("SHARE");
+				//const data = extractCanvas.toDataURL("image/png");
+				const blob = await new Promise<Blob | null>(
+					(resolve, reject) => {
+						extractCanvas.toBlob((blob) => {
+							if (blob) resolve(blob);
+							else reject(new Error("toBlob() returned null"));
+						}, "image/png");
+					}
+				);
+
+				console.log("BLOb FEDDISCH", blob === null);
+
+				if (blob === null) {
+					alert("Ein Fehler beim konvertieren ist aufgetreten!");
+					return;
+				}
+
+				let timestamp = getLocalTimestamp();
+				let fileName = "Scan " + timestamp + ".png";
+
+				// Create a File object
+				const file = new File([blob], "Hallo.png", {
+					type: "image/png",
+				});
+
+				navigator
+					.share({
+						files: [file],
+					})
+					.catch((e) => {
+						console.error("SHARE ERROR", e);
+						alert(
+							"Fehler: Das Bild konnte nicht geteilt werden. navigator.share() hat einen Fehler zurückgegeben."
+						);
+					});
+			} catch (e) {
+				console.error("CATCH", e);
+				alert(
+					"Fehler: Das Bild konnte nicht geteilt werden. Überprüfe ob du mit https:// verbunden bist."
+				);
+			}
+		};
+	}, "/editor-export");
+
+	function CreateNewPushShareID() {
+		// crypto.randomUUID() not available in http
+		pushShareUUID.set(uuidv4());
+		pushShareUploadState.set(PUSH_SHARE_UPLOAD_STATE.NOT_UPLOADED);
+
+		// MODIFIES PUSH SHARE POPUP !!
+		/*if (typeof PUSH_SHARE_POPUP_CLEAR_STATE === "function")
+			PUSH_SHARE_POPUP_CLEAR_STATE();*/
+		document.dispatchEvent(new CustomEvent("PUSH_SHARE_POPUP_CLEAR_STATE"));
+
+		pushShareRecievers.set(new Set());
+
+		console.log(
+			"NEW PUSH SHARE UUID",
+			pushShareUUID.get(),
+			pushShareUploadState.get()
+		);
+	}
+</script>

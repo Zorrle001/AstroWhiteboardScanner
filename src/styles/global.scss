@@ -1,0 +1,181 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	user-select: none;
+	-webkit-user-select: none;
+	flex-shrink: 0;
+
+	//touch-action: none !important;
+
+	font-family: "Fira Sans Condensed", "Arial", sans-serif;
+}
+
+:root {
+	--md-sys-color-primary: rgb(255 203 140);
+	--md-sys-color-surface-tint: rgb(255 185 92);
+	--md-sys-color-on-primary: rgb(70 42 0);
+	--md-sys-color-primary-container: rgb(255 165 0);
+	--md-sys-color-on-primary-container: rgb(104 64 0);
+	--md-sys-color-secondary: rgb(240 189 127);
+	--md-sys-color-on-secondary: rgb(70 42 0);
+	--md-sys-color-secondary-container: rgb(101 66 14);
+	--md-sys-color-on-secondary-container: rgb(225 175 114);
+	--md-sys-color-tertiary: rgb(198 198 199);
+	--md-sys-color-on-tertiary: rgb(47 49 50);
+	--md-sys-color-tertiary-container: rgb(21 23 24);
+	--md-sys-color-on-tertiary-container: rgb(127 128 129);
+	--md-sys-color-error: rgb(255 180 171);
+	--md-sys-color-on-error: rgb(105 0 5);
+	--md-sys-color-error-container: rgb(147 0 10);
+	--md-sys-color-on-error-container: rgb(255 218 214);
+	--md-sys-color-background: rgb(25 18 9);
+	--md-sys-color-on-background: rgb(240 224 209);
+	--md-sys-color-surface: rgb(19 19 19);
+	--md-sys-color-on-surface: rgb(226 226 226);
+	--md-sys-color-surface-variant: rgb(83 68 51);
+	--md-sys-color-on-surface-variant: rgb(217 195 172);
+	--md-sys-color-outline: rgb(161 142 121);
+	--md-sys-color-outline-variant: rgb(83 68 51);
+	--md-sys-color-shadow: rgb(0 0 0);
+	--md-sys-color-scrim: rgb(0 0 0);
+	--md-sys-color-inverse-surface: rgb(226 226 226);
+	--md-sys-color-inverse-on-surface: rgb(48 48 48);
+	--md-sys-color-inverse-primary: rgb(133 84 0);
+	--md-sys-color-primary-fixed: rgb(255 221 183);
+	--md-sys-color-on-primary-fixed: rgb(42 23 0);
+	--md-sys-color-primary-fixed-dim: rgb(255 185 92);
+	--md-sys-color-on-primary-fixed-variant: rgb(101 62 0);
+	--md-sys-color-secondary-fixed: rgb(255 221 183);
+	--md-sys-color-on-secondary-fixed: rgb(42 23 0);
+	--md-sys-color-secondary-fixed-dim: rgb(240 189 127);
+	--md-sys-color-on-secondary-fixed-variant: rgb(98 63 12);
+	--md-sys-color-tertiary-fixed: rgb(226 226 227);
+	--md-sys-color-on-tertiary-fixed: rgb(26 28 29);
+	--md-sys-color-tertiary-fixed-dim: rgb(198 198 199);
+	--md-sys-color-on-tertiary-fixed-variant: rgb(69 71 72);
+	--md-sys-color-surface-dim: rgb(19 19 19);
+	--md-sys-color-surface-bright: rgb(57 57 57);
+	--md-sys-color-surface-container-lowest: rgb(14 14 14);
+	--md-sys-color-surface-container-low: rgb(27 27 27);
+	--md-sys-color-surface-container: rgb(31 31 31);
+	--md-sys-color-surface-container-high: rgb(42 42 42);
+	--md-sys-color-surface-container-highest: rgb(53 53 53);
+
+	background-color: black;
+}
+
+:root::view-transition-group(ntfc1),
+:root::view-transition-image-pair(ntfc1) {
+	background: transparent !important;
+	border: none !important;
+
+	//box-shadow: none !important;
+	//backdrop-filter: blur(5px) !important;
+	//-webkit-backdrop-filter: blur(5px) !important;
+	overflow: hidden !important;
+}
+
+/* :root::view-transition-group(ntfc1),
+:root::view-transition-old(ntfc1),
+:root::view-transition-new(ntfc1) {
+	animation: none;
+	background: transparent; /* wichtig */
+/*box-shadow: none; /* falls die UA eins setzt */
+/*border: none;
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+} */
+
+:root::view-transition-group(ntfc1) {
+	/* kein Extra-Animationstiming, wir wollen nur Defaults loswerden */
+	background: transparent;
+	backdrop-filter: blur(5px) brightness(0.75);
+	-webkit-backdrop-filter: blur(5px) brightness(0.75);
+
+	//box-shadow: rgba(201, 201, 201, 0.35) 0px 3px 15px !important;
+
+	border-radius: calc(1rem - 1px) !important;
+}
+
+/* wir wollen NICHT crossfaden → nur der neue Snapshot soll sichtbar sein */
+:root::view-transition-old(ntfc1) {
+	opacity: 0;
+	backdrop-filter: blur(5px) brightness(0.75);
+	-webkit-backdrop-filter: blur(5px) brightness(0.75);
+}
+
+:root::view-transition-new(ntfc1) {
+	animation: none; /* keine zusätzliche Morph-Animation */
+	background: transparent; /* falls Chrome irgendwas setzt */
+	backdrop-filter: blur(5px) brightness(0.75);
+	-webkit-backdrop-filter: blur(5px) brightness(0.75);
+}
+
+:root::view-transition-group(ntfc2),
+:root::view-transition-old(ntfc2),
+:root::view-transition-new(ntfc2) {
+	animation: none;
+	backdrop-filter: blur(5px) brightness(0.75);
+	-webkit-backdrop-filter: blur(5px) brightness(0.75);
+}
+:root::view-transition-group(ntfc3),
+:root::view-transition-old(ntfc3),
+:root::view-transition-new(ntfc3) {
+	animation: none;
+	backdrop-filter: blur(5px) brightness(0.75);
+	-webkit-backdrop-filter: blur(5px) brightness(0.75);
+}
+
+html {
+	height: 100%;
+	height: 100svh; /* small viewport height - berücksichtigt Tastatur */
+	overflow: hidden;
+	touch-action: none !important;
+	-ms-touch-action: none !important;
+	-webkit-touch-action: none !important;
+	background-color: black;
+
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+
+	height: 100%;
+	overflow: hidden;
+	background-color: black;
+	color: white;
+	font-family: "Fira Sans Condensed", "Arial", sans-serif;
+	touch-action: none !important;
+	-ms-touch-action: none !important;
+	-webkit-touch-action: none !important;
+}
+
+#canvasContainer {
+	position: relative;
+	width: 100%;
+	height: 100%;
+
+	container: canvasContainer / size;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	> canvas,
+	> img {
+		position: absolute;
+		top: auto;
+		bottom: auto;
+		left: auto;
+		right: auto;
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+	}
+}

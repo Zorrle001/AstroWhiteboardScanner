@@ -1,0 +1,9 @@
+---
+type Props = {
+    urls: string[];
+};
+
+const { urls } = Astro.props;
+---
+
+{urls.map((url) => <a href={url} hidden />)}
