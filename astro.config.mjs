@@ -13,6 +13,5 @@ export default defineConfig({
 			},
 		},
 	},
-	site: 'https://zorrle001.github.io',
-  	base: '/AstroWhiteboardScanner',
+	site: 'https://astrowhiteboardscanner.zorrle001.dev',
 });
