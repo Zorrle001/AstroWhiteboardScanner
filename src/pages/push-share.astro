@@ -35,7 +35,9 @@ import Image from "astro/components/Image.astro";
 			id="shareBtn"
 		>
 		</i>
-		<a href="/" astro-><i class="fa-solid fa-xmark closeBtn"></i></a>
+		<a onclick="history.back()">
+			<i class="fa-solid fa-xmark closeBtn"></i>
+		</a>
 	</TopBar>
 	<div id="canvasContainer">
 		<div id="stateLabel">Wird geladen...</div>
@@ -96,7 +98,7 @@ import Image from "astro/components/Image.astro";
 			const IMG = new Image();
 			IMG.src = `https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare_uuid}/${device_uuid}`;
 			console.log(
-				`https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare_uuid}/${device_uuid}`
+				`https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare_uuid}/${device_uuid}`,
 			);
 
 			IMG.onload = () => {
@@ -159,7 +161,7 @@ import Image from "astro/components/Image.astro";
 					shareBtn.onclick = async () => {
 						try {
 							const res = await fetch(
-								`https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare_uuid}/${device_uuid}`
+								`https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare_uuid}/${device_uuid}`,
 							);
 							if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -178,13 +180,13 @@ import Image from "astro/components/Image.astro";
 								.catch((e) => {
 									console.error("SHARE ERROR", e);
 									alert(
-										"Fehler: Das Bild konnte nicht geteilt werden. navigator.share() hat einen Fehler zurückgegeben."
+										"Fehler: Das Bild konnte nicht geteilt werden. navigator.share() hat einen Fehler zurückgegeben.",
 									);
 								});
 						} catch (e) {
 							console.error("CATCH", e);
 							alert(
-								"Fehler: Das Bild konnte nicht geteilt werden. Überprüfe ob du mit https:// verbunden bist."
+								"Fehler: Das Bild konnte nicht geteilt werden. Überprüfe ob du mit https:// verbunden bist.",
 							);
 						}
 					};
@@ -241,7 +243,7 @@ import Image from "astro/components/Image.astro";
 							);
 						}
 					};*/
-				}
+				},
 			);
 		}
 	}, "/push-share");
