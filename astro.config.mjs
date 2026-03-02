@@ -14,5 +14,5 @@ export default defineConfig({
 		},
 	},
 	site: "https://astrowhiteboardscanner.zorrle001.dev",
-	trailingSlash: "never",
+	trailingSlash: "always",
 });
