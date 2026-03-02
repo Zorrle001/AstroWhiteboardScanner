@@ -119,7 +119,7 @@ import { getLocalTimestamp } from "@/utils/utils";
 		formData.append("images", file);
 		formData.append("pushshare_uuid", pushshare_uuid);
 		// TODO: FIX !
-		formData.append("device_uuid", sessionStorage.getItem("DEVICE_UUID")!);
+		formData.append("device_uuid", localStorage.getItem("DEVICE_UUID")!);
 		formData.append("width", width.toString());
 		formData.append("height", height.toString());
 
