@@ -1,8 +1,8 @@
 import { storedDeviceUUID } from "@/stores/store";
 import { v4 as uuidv4 } from "uuid";
 
-let device_uuid = sessionStorage.getItem("DEVICE_UUID");
-let device_name = sessionStorage.getItem("DEVICE_NAME");
+let device_uuid = localStorage.getItem("DEVICE_UUID");
+let device_name = localStorage.getItem("DEVICE_NAME");
 let ALREADY_REGISTERED = true;
 
 if (!device_uuid) {
@@ -22,7 +22,7 @@ function ConnectWS() {
 
 	console.log("Connect WS...");
 	const socket = new WebSocket(
-		"wss://api.astrowhiteboardscanner.zorrle001.dev"
+		"wss://api.astrowhiteboardscanner.zorrle001.dev",
 	);
 	// TODO REMOVE
 	window.socket = socket;
@@ -33,7 +33,7 @@ function ConnectWS() {
 			socket.send(
 				JSON.stringify({
 					id: "DEVICE_REGISTER",
-				})
+				}),
 			);
 			startKeepAlive();
 		} else {
@@ -42,7 +42,7 @@ function ConnectWS() {
 					id: "DEVICE_LOGIN",
 					device_uuid,
 					device_name,
-				})
+				}),
 			);
 			startKeepAlive();
 		}
@@ -79,8 +79,8 @@ function ConnectWS() {
 				throw new Error("DEVICE_REGISTER_RES returned invalid results");
 			}
 
-			sessionStorage.setItem("DEVICE_UUID", device_uuid);
-			sessionStorage.setItem("DEVICE_NAME", device_name);
+			localStorage.setItem("DEVICE_UUID", device_uuid);
+			localStorage.setItem("DEVICE_NAME", device_name);
 
 			console.log(device_name, device_uuid);
 
@@ -161,7 +161,7 @@ function ConnectWS() {
 
 	window.sendSocketRequest = (
 		msg: object,
-		callback: (response: object) => {}
+		callback: (response: object) => {},
 	) => {
 		const requestUUID = uuidv4();
 		msg.requestUUID = requestUUID;
@@ -185,7 +185,7 @@ function ConnectWS() {
 				socket.send(
 					JSON.stringify({
 						id: "KEEP_ALIVE",
-					})
+					}),
 				);
 		}, 5000);
 	}

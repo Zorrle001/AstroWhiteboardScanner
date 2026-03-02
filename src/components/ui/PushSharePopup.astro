@@ -107,6 +107,8 @@ import { getLocalTimestamp } from "@/utils/utils";
 
 		let timestamp = getLocalTimestamp();
 		let fileName = "Scan " + timestamp + ".png";
+		let width = extractCanvas.width;
+		let height = extractCanvas.height;
 
 		// Create a File object
 		const file = new File([blob], fileName, {
@@ -118,6 +120,8 @@ import { getLocalTimestamp } from "@/utils/utils";
 		formData.append("pushshare_uuid", pushshare_uuid);
 		// TODO: FIX !
 		formData.append("device_uuid", sessionStorage.getItem("DEVICE_UUID")!);
+		formData.append("width", width.toString());
+		formData.append("height", height.toString());
 
 		const res = await fetch(
 			"https://api.astrowhiteboardscanner.zorrle001.dev/upload",
@@ -174,6 +178,7 @@ import { getLocalTimestamp } from "@/utils/utils";
 		return String(n).padStart(2, "0");
 	}
 
+	// TODO: FIX
 	// SUBSCRITPION WIRD DERZEIT AKTIV WENN PAGE MIT pushSharePopup gerendert wird, selbst wenn dieses geschlossen ist.
 	// UNSCUBSCRIPE bei verlassen der page
 	createInitSwapFunction(
@@ -275,7 +280,7 @@ import { getLocalTimestamp } from "@/utils/utils";
 				});
 			}
 		},
-		undefined, // WHEN MOUNTED ALWAYS
+		undefined, // WHEN MOUNTED ALWAYS?
 		VIEW_TRANSITION_LIFECYCLE_EVENT.PAGE_LOAD,
 	);
 

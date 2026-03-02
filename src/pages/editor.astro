@@ -135,13 +135,17 @@ import NotificationHandler from "@/components/ui/NotificationHandler.astro";
 				".orientationBtn",
 			) as NodeListOf<HTMLElement>) {
 				orientationBtn.onclick = () => {
+					console.log(
+						"CLICK ORIENTATION BTN",
+						orientationBtn.dataset["orientation-id"],
+					);
 					document
 						.querySelector(".orientationBtn.selected")
 						?.classList.remove("selected");
 					orientationBtn.classList.add("selected");
 					EditorSettings.setKey(
 						"orientation",
-						orientationBtn.dataset["orientation-id"] as ORIANTATION,
+						orientationBtn.dataset["orientationId"] as ORIANTATION,
 					);
 				};
 			}

@@ -20,6 +20,7 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 		<i class="fa-solid fa-clock-rotate-left"></i>Verlauf
 	</h1>
 	<ul id="pushShareList">
+		<p id="stateLabel">Loading...</p>
 		<!-- <p>Dienstag, 18.11.2025</p>
 		<li>
 			<div>
@@ -147,6 +148,8 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 				padding: 1.25rem 1.5rem;
 
 				width: fit-content;
+				max-width: 100%;
+				overflow: hidden;
 				//width: 0px;
 				height: fit-content;
 
@@ -215,28 +218,60 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 
 				> a {
 					position: relative;
-					width: 100%;
+					min-width: 100%;
+					width: fit-content;
+					//width: 100%;
 					height: fit-content;
 
 					display: flex;
 					align-items: flex-start;
 					justify-content: flex-start;
 
-					container-type: inline-size;
+					//container-type: inline-size;
+
+					//overflow: hidden;
 
 					> img {
-						//position: absolute;
-						//width: min(100%, 30rem);
-						//max-height: 100%;
-						//width: min(100%, 30rem);
-						width: auto;
-						max-width: min(30rem, 100cqw);
-						max-height: 20rem;
-						//max-width: 100%;
+						--ratio: calc(var(--w) / var(--h));
+
+						// TODO: SIMPLIFY LOGIC
+
+						width: min(
+							min(
+								var(--w),
+								min(
+									30rem,
+									calc(
+										100vw - 2 * clamp(0px, 5cqi, 5rem) - 2 *
+											1.5rem
+									)
+								)
+							),
+							calc(min(var(--h), 20rem) * var(--ratio))
+								/* HEIGHT LIMITED */
+						);
+
+						height: min(
+							calc(
+								min(
+										var(--w),
+										min(
+												30rem,
+												calc(
+													100vw - 2 *
+														clamp(0px, 5cqi, 5rem) -
+														2 * 1.5rem
+												)
+											) /
+											var(--ratio)
+									)
+									/* WIDTH LIMITED */
+							),
+							min(var(--h), 20rem)
+						);
+
 						object-fit: contain;
 						cursor: pointer;
-
-						overflow: hidden;
 
 						border-radius: 0.5rem;
 					}
@@ -248,12 +283,17 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 
 <script>
 	import { storedDeviceUUID } from "@/stores/store";
-	import { createInitSwapFunction } from "@/utils/InitSwapFunction";
+	import {
+		createInitSwapFunction,
+		VIEW_TRANSITION_LIFECYCLE_EVENT,
+	} from "@/utils/InitSwapFunction";
 
 	console.log("RUN");
 
 	type SentPushShareType = {
 		fileName: string;
+		width: number;
+		height: number;
 		pushshare_uuid: string;
 		receivers: Array<{
 			uuid: string;
@@ -266,6 +306,8 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 
 	type RecievedPushShareType = {
 		fileName: string;
+		width: number;
+		height: number;
 		pushshare_uuid: string;
 		sender_uuid: string;
 		sender_name: string;
@@ -279,63 +321,79 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 		return (pushshare as SentPushShareType).receivers !== undefined;
 	}
 
-	createInitSwapFunction(() => {
-		const pushShareList = document.getElementById("pushShareList");
-		if (!pushShareList) return;
+	createInitSwapFunction(
+		() => {
+			const pushShareList = document.getElementById("pushShareList");
+			if (!pushShareList) return;
 
-		const device_uuid = storedDeviceUUID.get();
+			const device_uuid = storedDeviceUUID.get();
 
-		window.sendSocketRequest(
-			{
-				id: "GET_HISTORY",
-				device_uuid: storedDeviceUUID.get(),
-			},
-			(response: {
-				id: "GET_HISTORY_RES";
-				sent_pushshares: Array<SentPushShareType>;
-				recieved_pushshares: Array<RecievedPushShareType>;
-			}) => {
-				console.log(response);
+			window.sendSocketRequest(
+				{
+					id: "GET_HISTORY",
+					device_uuid: storedDeviceUUID.get(),
+				},
+				(response: {
+					id: "GET_HISTORY_RES";
+					sent_pushshares: Array<SentPushShareType>;
+					recieved_pushshares: Array<RecievedPushShareType>;
+				}) => {
+					console.log(response);
 
-				const allPushShares = [
-					...response.recieved_pushshares,
-					...response.sent_pushshares,
-				].sort((a, b) => {
-					return (
-						new Date(b.timestamp).getTime() -
-						new Date(a.timestamp).getTime()
-					);
-				});
-
-				let lastDate: null | Date = null;
-				for (const pushshare of allPushShares) {
-					const date = new Date(pushshare.timestamp);
-
-					const isSameDay = (date1: Date, date2: Date) => {
-						return date1.toDateString() === date2.toDateString();
-					};
-
-					if (lastDate === null || !isSameDay(lastDate, date)) {
-						lastDate = date;
-
-						const formattedDate = date.toLocaleDateString("de-DE", {
-							weekday: "long", // "Dienstag"
-							day: "2-digit", // "18"
-							month: "2-digit", // "11"
-							year: "numeric", // "2025"
-						});
-
-						pushShareList.insertAdjacentHTML(
-							"beforeend",
-							`<p>${formattedDate}</p>`,
+					const allPushShares = [
+						...response.recieved_pushshares,
+						...response.sent_pushshares,
+					].sort((a, b) => {
+						return (
+							new Date(b.timestamp).getTime() -
+							new Date(a.timestamp).getTime()
 						);
+					});
+
+					const stateLabel = document.getElementById("stateLabel");
+					if (!stateLabel) return;
+					if (allPushShares.length === 0) {
+						stateLabel.innerText =
+							"Du hast noch keine Push-Shares gesendet oder empfangen";
+						return;
+					} else {
+						stateLabel.remove();
 					}
 
-					if (isSentPushShare(pushshare)) {
-						// SENT
-						pushShareList.insertAdjacentHTML(
-							"beforeend",
-							`<li class="sent">
+					let lastDate: null | Date = null;
+					for (const pushshare of allPushShares) {
+						const date = new Date(pushshare.timestamp);
+
+						const isSameDay = (date1: Date, date2: Date) => {
+							return (
+								date1.toDateString() === date2.toDateString()
+							);
+						};
+
+						if (lastDate === null || !isSameDay(lastDate, date)) {
+							lastDate = date;
+
+							const formattedDate = date.toLocaleDateString(
+								"de-DE",
+								{
+									weekday: "long", // "Dienstag"
+									day: "2-digit", // "18"
+									month: "2-digit", // "11"
+									year: "numeric", // "2025"
+								},
+							);
+
+							pushShareList.insertAdjacentHTML(
+								"beforeend",
+								`<p>${formattedDate}</p>`,
+							);
+						}
+
+						if (isSentPushShare(pushshare)) {
+							// SENT
+							pushShareList.insertAdjacentHTML(
+								"beforeend",
+								`<li class="sent">
                                 <div>
                                     <p>Du hast einen PushShare an <span id="reciever_names_${pushshare.pushshare_uuid}"></span> gesendet</p>
                                     <span>
@@ -345,39 +403,43 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
                                     </span>
                                 </div>
                                 <a href="/push-share/?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
-                                    <img src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy"/>
+                                    <img style='--w: ${pushshare.width}px; --h: ${pushshare.height}px' src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy" decoding="async" />
                                 </a>
                             </li>`,
-						);
+							);
 
-						const recieverNamesEl = document.getElementById(
-							`reciever_names_${pushshare.pushshare_uuid}`,
-						);
-						const timeEl = document.getElementById(
-							`time_${pushshare.pushshare_uuid}`,
-						);
-						const fileNameEl = document.getElementById(
-							`fileName_${pushshare.pushshare_uuid}`,
-						);
+							const recieverNamesEl = document.getElementById(
+								`reciever_names_${pushshare.pushshare_uuid}`,
+							);
+							const timeEl = document.getElementById(
+								`time_${pushshare.pushshare_uuid}`,
+							);
+							const fileNameEl = document.getElementById(
+								`fileName_${pushshare.pushshare_uuid}`,
+							);
 
-						if (!recieverNamesEl || !timeEl || !fileNameEl) return;
+							if (!recieverNamesEl || !timeEl || !fileNameEl)
+								return;
 
-						let recievers = [];
-						for (let recv of pushshare.receivers) {
-							recievers.push(recv.name);
-						}
+							let recievers = [];
+							for (let recv of pushshare.receivers) {
+								recievers.push(recv.name);
+							}
 
-						recieverNamesEl.innerText = recievers.join(", ");
-						timeEl.innerText = date.toLocaleTimeString("de-DE", {
-							hour: "2-digit",
-							minute: "2-digit",
-						});
-						fileNameEl.innerText = pushshare.fileName;
-					} else {
-						// RECIEVED
-						pushShareList.insertAdjacentHTML(
-							"beforeend",
-							`<li>
+							recieverNamesEl.innerText = recievers.join(", ");
+							timeEl.innerText = date.toLocaleTimeString(
+								"de-DE",
+								{
+									hour: "2-digit",
+									minute: "2-digit",
+								},
+							);
+							fileNameEl.innerText = pushshare.fileName;
+						} else {
+							// RECIEVED
+							pushShareList.insertAdjacentHTML(
+								"beforeend",
+								`<li>
                                 <div>
                                     <p><span id="sender_name_${pushshare.pushshare_uuid}"></span> hat dir einen PushShare gesendet</p>
                                     <span>
@@ -387,32 +449,38 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
                                     </span>
                                 </div>
                                 <a href="/push-share/?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
-                                    <img src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy"/>
+                                    <img style='--w: ${pushshare.width}px; --h: ${pushshare.height}px' src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy" decoding="async"/>
                                 </a>
                             </li>`,
-						);
+							);
 
-						const senderNameEl = document.getElementById(
-							`sender_name_${pushshare.pushshare_uuid}`,
-						);
-						const timeEl = document.getElementById(
-							`time_${pushshare.pushshare_uuid}`,
-						);
-						const fileNameEl = document.getElementById(
-							`fileName_${pushshare.pushshare_uuid}`,
-						);
+							const senderNameEl = document.getElementById(
+								`sender_name_${pushshare.pushshare_uuid}`,
+							);
+							const timeEl = document.getElementById(
+								`time_${pushshare.pushshare_uuid}`,
+							);
+							const fileNameEl = document.getElementById(
+								`fileName_${pushshare.pushshare_uuid}`,
+							);
 
-						if (!senderNameEl || !timeEl || !fileNameEl) return;
+							if (!senderNameEl || !timeEl || !fileNameEl) return;
 
-						senderNameEl.innerText = pushshare.sender_name;
-						timeEl.innerText = date.toLocaleTimeString("de-DE", {
-							hour: "2-digit",
-							minute: "2-digit",
-						});
-						fileNameEl.innerText = pushshare.fileName;
+							senderNameEl.innerText = pushshare.sender_name;
+							timeEl.innerText = date.toLocaleTimeString(
+								"de-DE",
+								{
+									hour: "2-digit",
+									minute: "2-digit",
+								},
+							);
+							fileNameEl.innerText = pushshare.fileName;
+						}
 					}
-				}
-			},
-		);
-	}, "/history");
+				},
+			);
+		},
+		"/history",
+		VIEW_TRANSITION_LIFECYCLE_EVENT.AFTER_SWAP,
+	);
 </script>
