@@ -389,7 +389,7 @@ export function extract() {
 	);
 
 	storedExtractCanvas.set(extractCanvas);
-	navigate("/editor-export");
+	navigate("/editor-export/");
 }
 
 export function flipCanvas(

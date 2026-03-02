@@ -250,6 +250,8 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 	import { storedDeviceUUID } from "@/stores/store";
 	import { createInitSwapFunction } from "@/utils/InitSwapFunction";
 
+	console.log("RUN");
+
 	type SentPushShareType = {
 		fileName: string;
 		pushshare_uuid: string;
@@ -342,7 +344,7 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
                                         ></i><span id="fileName_${pushshare.pushshare_uuid}"></span>
                                     </span>
                                 </div>
-                                <a href="/push-share?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
+                                <a href="/push-share/?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
                                     <img src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy"/>
                                 </a>
                             </li>`,
@@ -384,7 +386,7 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
                                         ></i><span id="fileName_${pushshare.pushshare_uuid}"></span>
                                     </span>
                                 </div>
-                                <a href="/push-share?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
+                                <a href="/push-share/?uuid=${encodeURIComponent(pushshare.pushshare_uuid)}">
                                     <img src="https://api.astrowhiteboardscanner.zorrle001.dev/push-share/${pushshare.pushshare_uuid}/${device_uuid}" loading="lazy"/>
                                 </a>
                             </li>`,

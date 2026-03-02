@@ -1,26 +1,27 @@
+export enum VIEW_TRANSITION_LIFECYCLE_EVENT {
+	BEFORE_PREPARATION = "astro:before-preparation",
+	AFTER_PREPARATION = "astro:after-preparation",
+	BEFORE_SWAP = "astro:before-swap",
+	AFTER_SWAP = "astro:after-swap",
+	PAGE_LOAD = "astro:page-load",
+}
+
 export function createInitSwapFunction(
 	callback: () => void,
 	pathname?: string,
+	lifecycleEvent: VIEW_TRANSITION_LIFECYCLE_EVENT = VIEW_TRANSITION_LIFECYCLE_EVENT.AFTER_SWAP,
 ) {
-	document.addEventListener("astro:after-swap", () => {
-		if (!pathname || pathname === window.location.pathname) callback();
-	});
-
-	if (!pathname || pathname === window.location.pathname) callback();
-}
-
-export function createInitSwapOnPageLoadFunction(
-	callback: () => void,
-	pathname?: string,
-) {
-	document.addEventListener("astro:page-load", () => {
+	document.addEventListener(lifecycleEvent, () => {
 		if (
 			!pathname ||
-			pathname === window.location.pathname.replace(/\/$/, "")
+			pathname === window.location.pathname.replace(/(.+)\/$/, "$1")
 		)
 			callback();
 	});
 
-	if (!pathname || pathname === window.location.pathname.replace(/\/$/, ""))
+	if (
+		!pathname ||
+		pathname === window.location.pathname.replace(/(.+)\/$/, "$1")
+	)
 		callback();
 }

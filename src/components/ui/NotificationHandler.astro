@@ -118,11 +118,11 @@ import { NullViewAnimation } from "@/utils/ViewAnimation";
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-            </div>`
+            </div>`,
 		);
 
 		const el = notificationBox.querySelector(
-			".pushshare_uuid_" + pushshare_uuid + "_" + timestamp
+			".pushshare_uuid_" + pushshare_uuid + "_" + timestamp,
 		);
 		if (!el) return;
 		const fileNameSpan = el.querySelector("#fileNameSpan");
@@ -144,7 +144,7 @@ import { NullViewAnimation } from "@/utils/ViewAnimation";
 				device_uuid: storedDeviceUUID.get(),
 			});
 
-			navigate(`/push-share?uuid=${pushshare_uuid}`);
+			navigate(`/push-share?uuid=${pushshare_uuid}/`);
 
 			setTimeout(() => {
 				el.remove();

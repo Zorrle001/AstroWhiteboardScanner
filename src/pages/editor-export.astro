@@ -11,7 +11,7 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 	pageID="exportPage"
 	viewAnimation={PageViewAnimation}
 >
-	<PrefetchLinks urls={["/", "/editor"]} />
+	<PrefetchLinks urls={["/", "/editor/"]} />
 	<PushSharePopup />
 	<TopBar>
 		<a onclick="history.back()">
@@ -58,7 +58,7 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 		const extractCanvas = storedExtractCanvas.get();
 		if (!extractCanvas) {
 			//navigate("/", { history: "replace" });
-			navigate("/editor", { history: "replace" });
+			navigate("/editor/", { history: "replace" });
 			console.warn("SHOULD NAVIGATE");
 			return;
 		}
@@ -94,7 +94,7 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 							if (blob) resolve(blob);
 							else reject(new Error("toBlob() returned null"));
 						}, "image/png");
-					}
+					},
 				);
 
 				console.log("BLOb FEDDISCH", blob === null);
@@ -119,13 +119,13 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 					.catch((e) => {
 						console.error("SHARE ERROR", e);
 						alert(
-							"Fehler: Das Bild konnte nicht geteilt werden. navigator.share() hat einen Fehler zurückgegeben."
+							"Fehler: Das Bild konnte nicht geteilt werden. navigator.share() hat einen Fehler zurückgegeben.",
 						);
 					});
 			} catch (e) {
 				console.error("CATCH", e);
 				alert(
-					"Fehler: Das Bild konnte nicht geteilt werden. Überprüfe ob du mit https:// verbunden bist."
+					"Fehler: Das Bild konnte nicht geteilt werden. Überprüfe ob du mit https:// verbunden bist.",
 				);
 			}
 		};
@@ -146,7 +146,7 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 		console.log(
 			"NEW PUSH SHARE UUID",
 			pushShareUUID.get(),
-			pushShareUploadState.get()
+			pushShareUploadState.get(),
 		);
 	}
 </script>

@@ -76,7 +76,10 @@ import { getLocalTimestamp } from "@/utils/utils";
 		storedExtractCanvas,
 		pushShareUUID,
 	} from "@/stores/store";
-	import { createInitSwapOnPageLoadFunction } from "@/utils/InitSwapFunction";
+	import {
+		createInitSwapFunction,
+		VIEW_TRANSITION_LIFECYCLE_EVENT,
+	} from "@/utils/InitSwapFunction";
 	import { fade } from "astro:transitions";
 
 	let WAITING_RECIEVERS: string[] = [];
@@ -121,7 +124,7 @@ import { getLocalTimestamp } from "@/utils/utils";
 			{
 				method: "POST",
 				body: formData,
-			}
+			},
 		);
 
 		if (!res.ok) {
@@ -136,7 +139,7 @@ import { getLocalTimestamp } from "@/utils/utils";
 		console.log("UPLOAD FINISHED", pushShareRecievers.get());
 		for (const reciever_uuid of pushShareRecievers.get()) {
 			const recieverEl = document.querySelector(
-				`li[data-device-uuid='${reciever_uuid}']`
+				`li[data-device-uuid='${reciever_uuid}']`,
 			);
 			recieverEl?.classList.remove("sending");
 			recieverEl?.classList.add("sent");
@@ -173,98 +176,108 @@ import { getLocalTimestamp } from "@/utils/utils";
 
 	// SUBSCRITPION WIRD DERZEIT AKTIV WENN PAGE MIT pushSharePopup gerendert wird, selbst wenn dieses geschlossen ist.
 	// UNSCUBSCRIPE bei verlassen der page
-	createInitSwapOnPageLoadFunction(() => {
-		var pushSharePopup = document.getElementById("pushSharePopup");
-		//console.log("PSP", pushSharePopup);
-		if (!pushSharePopup) {
-			window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = undefined;
-			window.sendSocketMessage({
-				id: "UNSUBSCRIBE_ONLINE_DEVICES",
-			});
-		} else {
-			window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = (devices) => {
-				//console.log("UPDATE", devices);
-				console.log(devices);
-				const onlineDeviceList =
-					document.getElementById("onlineDeviceList");
-				if (!onlineDeviceList) return;
+	createInitSwapFunction(
+		() => {
+			var pushSharePopup = document.getElementById("pushSharePopup");
+			//console.log("PSP", pushSharePopup);
+			if (!pushSharePopup) {
+				window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = undefined;
+				window.sendSocketMessage({
+					id: "UNSUBSCRIBE_ONLINE_DEVICES",
+				});
+			} else {
+				window.ON_SUBSCRIBE_ONLINE_DEVICES_RES = (devices) => {
+					//console.log("UPDATE", devices);
+					console.log(devices);
+					const onlineDeviceList =
+						document.getElementById("onlineDeviceList");
+					if (!onlineDeviceList) return;
 
-				onlineDeviceList.innerHTML = "";
-				if (devices.length === 0) {
-					onlineDeviceList.insertAdjacentHTML(
-						"beforeend",
-						`<span>
+					onlineDeviceList.innerHTML = "";
+					if (devices.length === 0) {
+						onlineDeviceList.insertAdjacentHTML(
+							"beforeend",
+							`<span>
                             <i class="fa-solid fa-ban"></i>Keine Online Geräte verfügbar
-                        </span>`
-					);
-					return;
-				}
+                        </span>`,
+						);
+						return;
+					}
 
-				for (const { uuid, name } of devices) {
-					onlineDeviceList.insertAdjacentHTML(
-						"beforeend",
-						`<li data-device-uuid='${uuid}'>
+					for (const { uuid, name } of devices) {
+						onlineDeviceList.insertAdjacentHTML(
+							"beforeend",
+							`<li data-device-uuid='${uuid}'>
 						<div>
 							<i class="fa-regular fa-user"></i>
 						</div>
 						<i class="fa-solid fa-check acceptedIcon"></i>
 						<i class="fa-solid fa-ban deniedIcon"></i>
 						<span></span>
-					</li>`
-					);
-					// TO AVOID HTML INJECTION
-					onlineDeviceList.querySelector(
-						"li:last-child span"
-					)!.textContent = name;
-				}
-
-				for (const LiEl of onlineDeviceList.querySelectorAll("li")) {
-					LiEl.onclick = async () => {
-						const device_uuid = LiEl.dataset.deviceUuid;
-						if (!device_uuid) return;
-						console.log(device_uuid);
-
-						const state = pushShareUploadState.get();
-						if (state == PUSH_SHARE_UPLOAD_STATE.UPLOADED) {
-							LiEl.classList.add("sent");
-						} else {
-							LiEl.classList.add("sending");
-						}
-
-						const current_recievers = pushShareRecievers.get();
-						if (current_recievers.has(device_uuid)) {
-							console.log("DEVICE IS ALREADY RECIEVER. SKIPPED");
-							return;
-						}
-
-						pushShareRecievers.set(
-							current_recievers.add(device_uuid)
+					</li>`,
 						);
+						// TO AVOID HTML INJECTION
+						onlineDeviceList.querySelector(
+							"li:last-child span",
+						)!.textContent = name;
+					}
 
-						console.log("UUID", device_uuid);
+					for (const LiEl of onlineDeviceList.querySelectorAll(
+						"li",
+					)) {
+						LiEl.onclick = async () => {
+							const device_uuid = LiEl.dataset.deviceUuid;
+							if (!device_uuid) return;
+							console.log(device_uuid);
 
-						// TODO: DURING *UPLOADING*state IT CRASHES BECAUSE ITS SENT before upload sone
-						if (state == PUSH_SHARE_UPLOAD_STATE.NOT_UPLOADED) {
-							pushShareUploadState.set(
-								PUSH_SHARE_UPLOAD_STATE.UPLOADING
+							const state = pushShareUploadState.get();
+							if (state == PUSH_SHARE_UPLOAD_STATE.UPLOADED) {
+								LiEl.classList.add("sent");
+							} else {
+								LiEl.classList.add("sending");
+							}
+
+							const current_recievers = pushShareRecievers.get();
+							if (current_recievers.has(device_uuid)) {
+								console.log(
+									"DEVICE IS ALREADY RECIEVER. SKIPPED",
+								);
+								return;
+							}
+
+							pushShareRecievers.set(
+								current_recievers.add(device_uuid),
 							);
-							WAITING_RECIEVERS.push(device_uuid);
-							await UploadPushShare();
-							console.log("DONE; ADD RECIEVER");
-							//AddPushShareReciever([device_uuid]);
-						} else if (state == PUSH_SHARE_UPLOAD_STATE.UPLOADING) {
-							WAITING_RECIEVERS.push(device_uuid);
-						} else {
-							AddPushShareReciever([device_uuid]);
-						}
-					};
-				}
-			};
-			window.sendSocketMessage({
-				id: "SUBSCRIBE_ONLINE_DEVICES",
-			});
-		}
-	});
+
+							console.log("UUID", device_uuid);
+
+							// TODO: DURING *UPLOADING*state IT CRASHES BECAUSE ITS SENT before upload sone
+							if (state == PUSH_SHARE_UPLOAD_STATE.NOT_UPLOADED) {
+								pushShareUploadState.set(
+									PUSH_SHARE_UPLOAD_STATE.UPLOADING,
+								);
+								WAITING_RECIEVERS.push(device_uuid);
+								await UploadPushShare();
+								console.log("DONE; ADD RECIEVER");
+								//AddPushShareReciever([device_uuid]);
+							} else if (
+								state == PUSH_SHARE_UPLOAD_STATE.UPLOADING
+							) {
+								WAITING_RECIEVERS.push(device_uuid);
+							} else {
+								AddPushShareReciever([device_uuid]);
+							}
+						};
+					}
+				};
+				window.sendSocketMessage({
+					id: "SUBSCRIBE_ONLINE_DEVICES",
+				});
+			}
+		},
+		undefined, // WHEN MOUNTED ALWAYS
+		VIEW_TRANSITION_LIFECYCLE_EVENT.PAGE_LOAD,
+	);
 
 	document.addEventListener("PUSH_SHARE_POPUP_CLEAR_STATE", (e) => {
 		for (const reciever of document.querySelectorAll(".deviceList li")) {
