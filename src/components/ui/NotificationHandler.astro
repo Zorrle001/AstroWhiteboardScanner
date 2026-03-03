@@ -144,7 +144,7 @@ import { NullViewAnimation } from "@/utils/ViewAnimation";
 				device_uuid: storedDeviceUUID.get(),
 			});
 
-			navigate(`/push-share?uuid=${pushshare_uuid}/`);
+			navigate(`/push-share/?uuid=${pushshare_uuid}`);
 
 			setTimeout(() => {
 				el.remove();
