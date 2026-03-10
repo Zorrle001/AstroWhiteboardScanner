@@ -32,6 +32,7 @@ const { title, pageID, viewAnimation } = Astro.props;
 			rel="manifest"
 			href="/manifest.json"
 			crossorigin="use-credentials"
+			transition:persist
 		/>
 
 		<!-- <link rel="stylesheet/less" type="text/css" href="less/master.less" />
@@ -52,14 +53,17 @@ const { title, pageID, viewAnimation } = Astro.props;
 		</script> -->
 		<!-- <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script> -->
 
-		<script src="/opencv.js" async></script>
+		<!-- <script src="/opencv.js" defer async></script> -->
+		<!-- <script src="../libs/opencv.js"></script> -->
 
 		<!-- warning: loading OpenCV can take some time. Load asynchronously -->
-		<script
+		<!-- <script
 			src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"
 			is:inline
 		>
-		</script>
+		</script> -->
+		<!-- <script src="../libs/jscanify.min.js"></script> -->
+		<script src="/jscanify.min.js" is:inline></script>
 		<!-- <script src="js/WhiteboardScanner.js" defer></script>
         <script src="js/PushShareScript.js"></script> -->
 
@@ -381,3 +385,32 @@ const { title, pageID, viewAnimation } = Astro.props;
 		}
 	}
 </style>
+
+<script>
+	function onPageLoaded() {
+		console.log("--- LOADING DONE. Insert OpenCV ---");
+
+		console.time("OpenCVLoadingTimer");
+
+		const script = document.createElement("script");
+		script.src = "/opencv.js"; // Dein externes Skript
+		script.async = true; // Lädt asynchron, damit es den Main-Thread nicht blockiert
+
+		// Optional: Falls du wissen willst, wann das externe Skript fertig geladen ist
+		script.onload = () => {
+			console.log("OpenCV wurde erfolgreich geladen!");
+			console.timeEnd("OpenCVLoadingTimer");
+		};
+
+		// Füge es dem Dokument hinzu (z.B. am Ende des Bodys)
+		document.body.appendChild(script);
+	}
+
+	// Prüfen, ob die Seite bereits fertig geladen ist
+	if (document.readyState === "complete") {
+		onPageLoaded();
+	} else {
+		// Falls nicht, auf das Event warten
+		window.addEventListener("load", onPageLoaded);
+	}
+</script>
