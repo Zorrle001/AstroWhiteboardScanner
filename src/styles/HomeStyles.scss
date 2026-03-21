@@ -85,4 +85,125 @@
 			}
 		}
 	}
+
+	#toolBarContainer {
+		position: absolute;
+		width: auto;
+		height: 72px !important;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		bottom: 40px;
+
+		#toolBar {
+			width: auto;
+			height: 72px !important;
+
+			background-color: #151718;
+			border-radius: 9999rem;
+
+			padding: 16px;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+
+			//margin-inline: 16px;
+
+			& > i,
+			& > #pushShareCheckbox {
+				//margin: 4px;
+				height: 100%;
+				width: calc(64px - 2 * 12px);
+				//width: 100cqh;
+				//height: calc(64px - 4 * 8px);
+				//width: calc(64px - 4 * 8px);
+				//background: lightgray;
+				border-radius: 9999rem;
+
+				display: grid;
+				place-content: center;
+
+				font-size: 1.25rem;
+			}
+
+			#pushShareNameBox {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				width: 10rem;
+
+				> input[type="text"] {
+					background-color: white;
+					outline: none;
+					border: none;
+					height: 20px;
+					padding-inline: 0.25rem;
+					border-radius: 4px;
+				}
+			}
+
+			#pushShareCheckbox {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+				input {
+					appearance: none;
+					//margin: calc(18px / 2);
+					width: 20px;
+					height: 20px;
+					background-color: rgba(128, 128, 128, 0.5);
+					border-radius: 4px;
+					//margin-left: calc(1.5rem / 2 + 0.25rem);
+
+					cursor: pointer;
+
+					&:checked {
+						//background-color: orange;
+
+						& + i {
+							color: orange !important;
+						}
+					}
+				}
+				i {
+					position: absolute;
+					//margin: calc(18px / 2);
+					width: 18px;
+					height: 18px;
+
+					pointer-events: none;
+
+					display: grid;
+					place-content: center;
+					padding-top: 1.5px;
+
+					font-size: 0.85rem;
+
+					color: transparent;
+				}
+			}
+		}
+
+		#toolBarBtn {
+			outline: none;
+			border: none;
+			width: 48px;
+			height: 48px;
+			background-color: white;
+			border-radius: 8px;
+
+			display: grid;
+			place-content: center;
+
+			color: black;
+			font-size: 1rem;
+
+			cursor: pointer;
+		}
+	}
 }

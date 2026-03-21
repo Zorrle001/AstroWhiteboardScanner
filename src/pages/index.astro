@@ -65,7 +65,7 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
     >
     <md-outlined-button>Back</md-outlined-button> -->
 
-	<section id="pushShareSection">
+	<!--<section id="pushShareSection">
 		<i class="fa-solid fa-users"></i>
 		<div>
 			<p>Push-Share Funktion aktivieren</p>
@@ -81,6 +81,27 @@ import { HomeViewAnimation } from "@/utils/ViewAnimation";
 			<i class="fa-solid fa-globe"></i>
 			<p>Offline</p>
 		</section>
+	</section>-->
+
+	<section id="toolBarContainer">
+		<section id="toolBar">
+			<i class="fa-solid fa-users"></i>
+			<div id="pushShareNameBox">
+				<p>Push-Share Name</p>
+				<input
+					type="text"
+					id="pushShareNameInput"
+					placeholder="[Unbekannt]"
+				/>
+			</div>
+			<div id="pushShareCheckbox">
+				<input type="checkbox" />
+				<i class="fa-solid fa-check"></i>
+			</div>
+		</section>
+		<button id="toolBarBtn">
+			<i class="fa-solid fa-gear"></i>
+		</button>
 	</section>
 </PageLayout>
 
