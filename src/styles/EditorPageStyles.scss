@@ -181,8 +181,8 @@
 		height: calc(1rem * var(--scale));
 		margin-top: calc(-0.5rem * var(--scale));
 		margin-left: calc(-0.5rem * var(--scale));
-		//background-color: rgba(255, 166, 0, 0.25);
-		background-color: rgba(255, 255, 255, 0.25);
+		background-color: rgba(255, 166, 0, 0.25);
+		//background-color: rgba(255, 255, 255, 0.25);
 		z-index: 16;
 
 		transform: translate(var(--x), var(--y));
@@ -195,7 +195,7 @@
 		//transform: scale(var(--scale));
 		//scale: var(--scale);
 		//transform-origin: bottom bottom;
-		outline: 1px solid white;
+		outline: 2px solid white;
 		outline-offset: -1px;
 
 		//scale: var(--scale);
