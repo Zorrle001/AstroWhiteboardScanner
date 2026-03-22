@@ -66,7 +66,17 @@ export async function loadImageEditor(
 
 export function attachEditorEventListeners(pathname: string = "/editor") {
 	window.addEventListener("resize", () => {
-		if (window.location.pathname !== pathname) return;
+		console.log(
+			"RESIZE",
+			pathname,
+			pathname !== window.location.pathname.replace(/(.+)\/$/, "$1"),
+		);
+		// TODO: Fix
+		if (
+			!pathname ||
+			pathname !== window.location.pathname.replace(/(.+)\/$/, "$1")
+		)
+			return;
 		console.log("REW");
 
 		//CORNER_POINTS = getDefaultCornerPoints();
@@ -78,7 +88,18 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 	var dragOffset = { x: 0, y: 0 };
 
 	const canvas = document.getElementById("result") as HTMLCanvasElement;
-	document.onpointerdown = (e) => {
+	const overlayCanvas = document.getElementById("overlayCanvas");
+
+	if (!overlayCanvas) {
+		alert("ERROR: Overlay Canvas is null");
+		return;
+	}
+
+	window.onpointercancel = (e) => {
+		console.log("CANCEL");
+	};
+
+	window.onpointerdown = (e) => {
 		// document listener so that i dont have to reattach on every page switch
 		if (e.target == null) return;
 		if (!document.getElementById("result")?.contains(e.target as Node)) {
@@ -86,6 +107,9 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 		}
 
 		e.preventDefault();
+		e.stopImmediatePropagation();
+		e.stopPropagation();
+		//overlayCanvas.setPointerCapture(e.pointerId);
 
 		const canvas = document.getElementById("result") as HTMLCanvasElement;
 		const rect = canvas.getBoundingClientRect();
@@ -117,9 +141,12 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 		//drawCornerZoomCanvas(CORNER_POINTS[closestPoint]);
 	};
 
-	document.onpointermove = (e) => {
+	window.onpointermove = (e) => {
+		console.log("TRIGGER");
 		if (draggedCorner == null || !CORNER_POINTS) return;
 		e.preventDefault();
+		e.stopImmediatePropagation();
+		e.stopPropagation();
 
 		const canvas = document.getElementById("result") as HTMLCanvasElement;
 
@@ -191,9 +218,11 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 		drawEditorFrame();
 	};
 
-	document.onpointerup = (e) => {
+	window.onpointerup = (e) => {
 		if (draggedCorner != null) {
 			e.preventDefault();
+			e.stopImmediatePropagation();
+			e.stopPropagation();
 		}
 		draggedCorner = null;
 
@@ -231,10 +260,16 @@ export function drawEditorFrame() {
 	const canvas = document.getElementById("result") as HTMLCanvasElement;
 	const rect = canvas.getBoundingClientRect();
 
-	const top = rect.top;
-	const left = rect.left;
+	const top = rect.top * window.devicePixelRatio;
+	const left = rect.left * window.devicePixelRatio;
 	const width = rect.width;
 	const height = rect.height;
+	const adjustedCanvasWidth = Math.round(
+		rect.width * window.devicePixelRatio,
+	);
+	const adjustedCanvasHeight = Math.round(
+		rect.height * window.devicePixelRatio,
+	);
 
 	//const ctx = canvas.getContext("2d");
 
@@ -242,8 +277,18 @@ export function drawEditorFrame() {
 		"overlayCanvas",
 	) as HTMLCanvasElement;
 
-	overlayCanvas.width = window.innerWidth;
-	overlayCanvas.height = window.innerHeight;
+	const viewportWidthPx = Math.round(
+		(window.visualViewport?.width ?? window.innerWidth) *
+			window.devicePixelRatio,
+	);
+
+	const viewportHeightPx = Math.round(
+		(window.visualViewport?.height ?? window.innerHeight) *
+			window.devicePixelRatio,
+	);
+
+	overlayCanvas.width = viewportWidthPx;
+	overlayCanvas.height = viewportHeightPx;
 
 	const overlayCtx = overlayCanvas.getContext("2d");
 	if (!overlayCtx) return;
@@ -266,8 +311,12 @@ export function drawEditorFrame() {
 	overlayCtx.rect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
 	overlayCtx.moveTo(
-		left + (CORNER_POINTS[CORNER.TOP_LEFT].x / canvas.width) * rect.width,
-		top + (CORNER_POINTS[CORNER.TOP_LEFT].y / canvas.height) * rect.height,
+		left +
+			(CORNER_POINTS[CORNER.TOP_LEFT].x / canvas.width) *
+				adjustedCanvasWidth,
+		top +
+			(CORNER_POINTS[CORNER.TOP_LEFT].y / canvas.height) *
+				adjustedCanvasHeight,
 	);
 
 	for (const lines of [
@@ -280,8 +329,8 @@ export function drawEditorFrame() {
 		const endPoint = CORNER_POINTS[lines[1]];
 
 		overlayCtx.lineTo(
-			left + (endPoint.x / canvas.width) * rect.width,
-			top + (endPoint.y / canvas.height) * rect.height,
+			left + (endPoint.x / canvas.width) * adjustedCanvasWidth,
+			top + (endPoint.y / canvas.height) * adjustedCanvasHeight,
 		);
 	}
 	overlayCtx.closePath();
@@ -291,8 +340,12 @@ export function drawEditorFrame() {
 	// DRAW ORANGE FRAME
 	overlayCtx.beginPath();
 	overlayCtx.moveTo(
-		left + (CORNER_POINTS[CORNER.TOP_LEFT].x / canvas.width) * rect.width,
-		top + (CORNER_POINTS[CORNER.TOP_LEFT].y / canvas.height) * rect.height,
+		left +
+			(CORNER_POINTS[CORNER.TOP_LEFT].x / canvas.width) *
+				adjustedCanvasWidth,
+		top +
+			(CORNER_POINTS[CORNER.TOP_LEFT].y / canvas.height) *
+				adjustedCanvasHeight,
 	);
 
 	for (const lines of [
@@ -305,8 +358,8 @@ export function drawEditorFrame() {
 		const endPoint = CORNER_POINTS[lines[1]];
 
 		overlayCtx.lineTo(
-			left + (endPoint.x / canvas.width) * rect.width,
-			top + (endPoint.y / canvas.height) * rect.height,
+			left + (endPoint.x / canvas.width) * adjustedCanvasWidth,
+			top + (endPoint.y / canvas.height) * adjustedCanvasHeight,
 		);
 	}
 	overlayCtx.closePath();
@@ -317,8 +370,8 @@ export function drawEditorFrame() {
 
 		overlayCtx.beginPath();
 		overlayCtx.arc(
-			left + (point.x / canvas.width) * rect.width,
-			top + (point.y / canvas.height) * rect.height,
+			left + (point.x / canvas.width) * adjustedCanvasWidth,
+			top + (point.y / canvas.height) * adjustedCanvasHeight,
 			16 * 0.5 * (adjustFactor * 2),
 			0,
 			2 * Math.PI,
