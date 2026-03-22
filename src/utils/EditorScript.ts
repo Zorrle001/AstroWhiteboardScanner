@@ -26,8 +26,12 @@ export async function loadImageEditor(
 	revokeObjectURL = false,
 ) {
 	const canvas = document.getElementById("result") as HTMLCanvasElement;
+	const overlayZoomCanvas = document.getElementById(
+		"overlayZoomCanvas",
+	) as HTMLCanvasElement;
 	const ctx = canvas.getContext("2d");
-	if (!ctx) return;
+	const overlayZoomCtx = overlayZoomCanvas.getContext("2d");
+	if (!ctx || !overlayZoomCtx) return;
 
 	const img = new globalThis.Image();
 	img.onload = () => {
@@ -35,8 +39,17 @@ export async function loadImageEditor(
 		canvas.width = img.width;
 		canvas.height = img.height;
 		ctx.drawImage(img, 0, 0);
-
 		canvas.dataset.imageLoaded = "true";
+
+		overlayZoomCanvas.width = img.width;
+		overlayZoomCanvas.height = img.height;
+		overlayZoomCtx.drawImage(img, 0, 0);
+		overlayZoomCanvas.dataset.imageLoaded = "true";
+
+		//const overlayZoomCtx = canvas.cloneNode();
+		//overlayZoomCanvas.id = "overlayZoomCtx";
+		//document.bod;
+
 		if (revokeObjectURL) URL.revokeObjectURL(imageSrc);
 
 		// CHECK IF OUT OF CANVAS
@@ -138,6 +151,7 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 
 		document.body.classList.add("showCornerZoomCanvas");
 
+		if (closestPoint) drawZoomCircle_v2(closestPoint, canvas, rect);
 		//drawCornerZoomCanvas(CORNER_POINTS[closestPoint]);
 	};
 
@@ -215,6 +229,8 @@ export function attachEditorEventListeners(pathname: string = "/editor") {
 			},
 		);
 
+		drawZoomCircle_v2(draggedCorner, canvas, rect);
+
 		drawEditorFrame();
 	};
 
@@ -253,6 +269,7 @@ export function getDefaultCornerPoints() {
 
 export function resetCornerPoints() {
 	CORNER_POINTS = getDefaultCornerPoints();
+
 	drawEditorFrame();
 }
 
@@ -276,6 +293,9 @@ export function drawEditorFrame() {
 	const overlayCanvas = document.getElementById(
 		"overlayCanvas",
 	) as HTMLCanvasElement;
+	const overlayLineCanvas = document.getElementById(
+		"overlayLineCanvas",
+	) as HTMLCanvasElement;
 
 	const viewportWidthPx = Math.round(
 		(window.visualViewport?.width ?? window.innerWidth) *
@@ -290,8 +310,12 @@ export function drawEditorFrame() {
 	overlayCanvas.width = viewportWidthPx;
 	overlayCanvas.height = viewportHeightPx;
 
+	overlayLineCanvas.width = viewportWidthPx;
+	overlayLineCanvas.height = viewportHeightPx;
+
 	const overlayCtx = overlayCanvas.getContext("2d");
-	if (!overlayCtx) return;
+	const overlayLineCtx = overlayLineCanvas.getContext("2d");
+	if (!overlayCtx || !overlayLineCtx) return;
 
 	if (!CORNER_POINTS) {
 		CORNER_POINTS = getDefaultCornerPoints();
@@ -337,9 +361,13 @@ export function drawEditorFrame() {
 	overlayCtx.fillStyle = "rgba(0,0,0,0.35)";
 	overlayCtx.fill("evenodd");
 
-	// DRAW ORANGE FRAME
-	overlayCtx.beginPath();
-	overlayCtx.moveTo(
+	// DRAW ORANGE FRAME on overlayLineCanvas
+	overlayLineCtx.strokeStyle = "orange";
+	overlayLineCtx.lineWidth = 16 * 0.2 * adjustFactor;
+	overlayLineCtx.lineCap = "round";
+
+	overlayLineCtx.beginPath();
+	overlayLineCtx.moveTo(
 		left +
 			(CORNER_POINTS[CORNER.TOP_LEFT].x / canvas.width) *
 				adjustedCanvasWidth,
@@ -357,14 +385,15 @@ export function drawEditorFrame() {
 		const startPoint = CORNER_POINTS[lines[0]];
 		const endPoint = CORNER_POINTS[lines[1]];
 
-		overlayCtx.lineTo(
+		overlayLineCtx.lineTo(
 			left + (endPoint.x / canvas.width) * adjustedCanvasWidth,
 			top + (endPoint.y / canvas.height) * adjustedCanvasHeight,
 		);
 	}
-	overlayCtx.closePath();
-	overlayCtx.stroke();
+	overlayLineCtx.closePath();
+	overlayLineCtx.stroke();
 
+	// DRAW CIRCLES ON overlayCanvas
 	for (const pointKey in CORNER_POINTS) {
 		const point = CORNER_POINTS[pointKey as keyof typeof CORNER_POINTS];
 
@@ -469,4 +498,39 @@ export function flipCanvas(
 		ctx.drawImage(canvas, 0, 0, canvas.width * -1, canvas.height * -1);
 		ctx.restore();
 	}
+}
+
+function drawZoomCircle_v2(
+	draggedCorner: CORNER,
+	canvas: HTMLCanvasElement,
+	rect: DOMRect,
+) {
+	if (!CORNER_POINTS || !CORNER_POINTS[draggedCorner]) return;
+	document
+		.getElementById("overlayZoomCanvas")
+		?.style.setProperty(
+			"--x",
+			(CORNER_POINTS[draggedCorner].x / canvas.width) * rect.width + "px",
+		);
+	document
+		.getElementById("overlayZoomCanvas")
+		?.style.setProperty(
+			"--y",
+			(CORNER_POINTS[draggedCorner].y / canvas.height) * rect.height +
+				"px",
+		);
+
+	document
+		.getElementById("overlayZoomCircle")
+		?.style.setProperty(
+			"--x",
+			(CORNER_POINTS[draggedCorner].x / canvas.width) * rect.width + "px",
+		);
+	document
+		.getElementById("overlayZoomCircle")
+		?.style.setProperty(
+			"--y",
+			(CORNER_POINTS[draggedCorner].y / canvas.height) * rect.height +
+				"px",
+		);
 }

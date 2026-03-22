@@ -11,7 +11,8 @@
 }
 
 :global(#editorPage) {
-	#overlayCanvas {
+	#overlayCanvas,
+	#overlayLineCanvas {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -19,6 +20,10 @@
 		height: 100%;
 		pointer-events: none;
 		z-index: 10;
+	}
+
+	#overlayLineCanvas {
+		z-index: 12;
 	}
 
 	#canvasContainer {
@@ -42,6 +47,8 @@
 			max-width: 100%;
 			max-height: 100%;
 			object-fit: contain;
+
+			anchor-name: --result;
 
 			&#pushShareCanvas {
 				display: none;
@@ -124,4 +131,84 @@
 			}
 		}
 	}
+}
+
+:global(#overlayZoomCanvas) {
+	--x: 800px;
+	--y: 500px;
+	--scale: 1;
+
+	/*@property --scale {
+		syntax: "<number>";
+		inherits: false;
+		initial-value: 1;
+	}*/
+
+	position: fixed;
+	top: anchor(--result top);
+	left: anchor(--result left);
+	width: anchor-size(--result width);
+	height: anchor-size(--result height);
+	opacity: 1;
+
+	transition: 0.25s ease-out;
+	transition-property: scale, opacity;
+
+	scale: var(--scale);
+	/*transform: translate(
+		calc(var(--x) / var(--scale)),
+		calc(var(--y) / var(--scale))
+	);*/
+	transform-origin: var(--x) var(--y);
+
+	pointer-events: none;
+
+	// -1px for border
+	clip-path: circle(0.5rem at var(--x) var(--y));
+
+	z-index: 11;
+
+	//display: none;
+
+	& + #overlayZoomCircle {
+		position: fixed;
+		--x: 0px;
+		--y: 0px;
+		--scale: 1;
+		top: anchor(--result top);
+		left: anchor(--result left);
+		width: calc(1rem * var(--scale));
+		height: calc(1rem * var(--scale));
+		margin-top: calc(-0.5rem * var(--scale));
+		margin-left: calc(-0.5rem * var(--scale));
+		//background-color: rgba(255, 166, 0, 0.25);
+		background-color: rgba(255, 255, 255, 0.25);
+		z-index: 16;
+
+		transform: translate(var(--x), var(--y));
+
+		transition: 0.25s ease-out;
+		transition-property: width, height, margin, background-color;
+
+		border-radius: 100%;
+
+		//transform: scale(var(--scale));
+		//scale: var(--scale);
+		//transform-origin: bottom bottom;
+		outline: 1px solid white;
+		outline-offset: -1px;
+
+		//scale: var(--scale);
+	}
+}
+
+:global(body.showCornerZoomCanvas #overlayZoomCanvas) {
+	--scale: 4;
+	opacity: 1;
+}
+
+:global(body.showCornerZoomCanvas #overlayZoomCircle) {
+	--scale: 4 !important;
+	opacity: 1;
+	background-color: transparent !important;
 }

@@ -32,10 +32,19 @@ import { PageViewAnimation } from "@/utils/ViewAnimation";
 	</TopBar>
 	<div id="canvasContainer"></div>
 	<canvas id="result" transition:persist="resultCanvas"></canvas>
+	<canvas id="overlayZoomCanvas" transition:persist="overlayZoomCanvas">
+	</canvas>
+	<div id="overlayZoomCircle" transition:persist="overlayZoomCircle"></div>
 </PageLayout>
 
 <style lang="scss">
 	:global(#exportPage #result) {
+		display: none;
+	}
+	:global(#exportPage #overlayZoomCanvas) {
+		display: none;
+	}
+	:global(#exportPage #overlayZoomCircle) {
 		display: none;
 	}
 </style>

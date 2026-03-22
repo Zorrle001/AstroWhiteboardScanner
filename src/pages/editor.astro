@@ -62,15 +62,26 @@ import NotificationHandler from "@/components/ui/NotificationHandler.astro";
 			<i class="fa-solid fa-xmark closeBtn"></i>
 		</a>
 	</TopBar>
+	<canvas id="overlayLineCanvas"></canvas>
 	<canvas id="overlayCanvas"></canvas>
+
 	<div id="canvasContainer">
 		<canvas id="result" transition:persist="resultCanvas"></canvas>
+
+		<!-- <div id="overlayZoomContainer">
+		<canvas id="overlayZoomCanvas" transition:persist="overlayZoomCanvas">
+		</canvas>
+	</div> -->
 		<!-- <canvas id="cornerPointCanvas"></canvas>
         <canvas id="cornerPointCircleCanvas"></canvas> -->
 		<div id="cornerZoomWrapper">
 			<canvas id="cornerZoomCanvas"></canvas>
 		</div>
 	</div>
+
+	<canvas id="overlayZoomCanvas" transition:persist="overlayZoomCanvas">
+	</canvas>
+	<div id="overlayZoomCircle" transition:persist="overlayZoomCircle"></div>
 
 	<style lang="scss">
 		@use "@/styles/EditorPageStyles.scss";
