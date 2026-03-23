@@ -59,6 +59,18 @@
 			}
 		}
 
+		> #canvasSpacer {
+			--width: 1920;
+			--height: 1080;
+			aspect-ratio: var(--width) / var(--height);
+			width: min(
+				100cqw,
+				100cqh * (var(--width) / var(--height)),
+				calc(var(--width) * 1px)
+			);
+			max-height: 100%;
+		}
+
 		#cornerZoomWrapper {
 			--left: 0px;
 			--right: 0px;
@@ -145,16 +157,23 @@
 	}*/
 
 	position: fixed;
+	top: 0px;
+	left: 0px;
 	top: anchor(--result top);
 	left: anchor(--result left);
+	width: 100%;
+	height: 100%;
 	width: anchor-size(--result width);
 	height: anchor-size(--result height);
-	opacity: 1;
+	opacity: 0;
 
-	transition: 0.25s ease-out;
-	transition-property: scale, opacity;
+	transition:
+		transform 0.25s ease-out 0s,
+		opacity 0.25s ease-out 0.25s;
+	//transition-property: transform, opacity;
 
-	scale: var(--scale);
+	//scale: var(--scale);
+
 	/*transform: translate(
 		calc(var(--x) / var(--scale)),
 		calc(var(--y) / var(--scale))
@@ -164,7 +183,23 @@
 	pointer-events: none;
 
 	// -1px for border
-	clip-path: circle(0.5rem at var(--x) var(--y));
+	clip-path: circle(0.5rem at 300px 300px) !important;
+	-webkit-clip-path: circle(0.5rem at var(--x) var(--y)) !important;
+	overflow: hidden;
+
+	/* Safari Rendering-Fixes */
+	transform: translateZ(0) scale(var(--scale));
+	will-change:
+		transition,
+		transform,
+		transform-origin,
+		opacity,
+		-webkit-clip-path,
+		clip-path,
+		scale,
+		--scale,
+		--x,
+		--y;
 
 	z-index: 11;
 
@@ -175,6 +210,8 @@
 		--x: 0px;
 		--y: 0px;
 		--scale: 1;
+		top: 0px;
+		left: 0px;
 		top: anchor(--result top);
 		left: anchor(--result left);
 		width: calc(1rem * var(--scale));
@@ -187,16 +224,29 @@
 
 		transform: translate(var(--x), var(--y));
 
-		transition: 0.25s ease-out;
-		transition-property: width, height, margin, background-color;
+		will-change:
+			transform, opacity, width, height, margin-top, margin-left, --scale,
+			--x, --y;
+
+		//transition: 0.25s ease-out;
+		//transition-property: width, height, margin, background-color;
+
+		transition:
+			width 0.25s ease-out 0s,
+			height 0.25s ease-out 0s,
+			margin 0.25s ease-out 0s,
+			background-color 0.25s ease-out 0s,
+			opacity 0.25s ease-out 0.25s;
 
 		border-radius: 100%;
 
 		//transform: scale(var(--scale));
 		//scale: var(--scale);
 		//transform-origin: bottom bottom;
-		outline: 2px solid white;
+		outline: 1px solid orange;
 		outline-offset: -1px;
+
+		opacity: 0;
 
 		//scale: var(--scale);
 	}
@@ -205,10 +255,23 @@
 :global(body.showCornerZoomCanvas #overlayZoomCanvas) {
 	--scale: 4;
 	opacity: 1;
+	//transition-delay: 0s !important;
+
+	transition:
+		transform 0.25s ease-out 0s,
+		opacity 0s ease-out 0s !important;
 }
 
 :global(body.showCornerZoomCanvas #overlayZoomCircle) {
 	--scale: 4 !important;
-	opacity: 1;
+	opacity: 1 !important;
 	background-color: transparent !important;
+	//transition-delay: 0s !important;
+
+	transition:
+		width 0.25s ease-out 0s,
+		height 0.25s ease-out 0s,
+		margin 0.25s ease-out 0s,
+		background-color 0.25s ease-out 0s,
+		opacity 0s ease-out 0s !important;
 }

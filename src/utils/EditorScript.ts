@@ -41,6 +41,13 @@ export async function loadImageEditor(
 		ctx.drawImage(img, 0, 0);
 		canvas.dataset.imageLoaded = "true";
 
+		document
+			.getElementById("canvasSpacer")
+			?.style.setProperty("--width", img.width + "");
+		document
+			.getElementById("canvasSpacer")
+			?.style.setProperty("--height", img.height + "");
+
 		overlayZoomCanvas.width = img.width;
 		overlayZoomCanvas.height = img.height;
 		overlayZoomCtx.drawImage(img, 0, 0);
