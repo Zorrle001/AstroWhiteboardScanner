@@ -67,7 +67,15 @@ import NotificationHandler from "@/components/ui/NotificationHandler.astro";
 
 	<div id="canvasContainer">
 		<canvas id="result" transition:persist="resultCanvas"></canvas>
-		<div id="canvasSpacer" transition:persist="canvasSpacer"></div>
+		<div id="canvasSpacer" transition:persist="canvasSpacer">
+			<canvas
+				id="overlayZoomCanvas"
+				transition:persist="overlayZoomCanvas"
+			>
+			</canvas>
+			<div id="overlayZoomCircle" transition:persist="overlayZoomCircle">
+			</div>
+		</div>
 
 		<!-- <div id="overlayZoomContainer">
 		<canvas id="overlayZoomCanvas" transition:persist="overlayZoomCanvas">
@@ -79,10 +87,6 @@ import NotificationHandler from "@/components/ui/NotificationHandler.astro";
 			<canvas id="cornerZoomCanvas"></canvas>
 		</div>
 	</div>
-
-	<canvas id="overlayZoomCanvas" transition:persist="overlayZoomCanvas">
-	</canvas>
-	<div id="overlayZoomCircle" transition:persist="overlayZoomCircle"></div>
 
 	<style lang="scss">
 		@use "@/styles/EditorPageStyles.scss";
